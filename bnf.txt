@@ -18,8 +18,8 @@ Primitive
 
 Non-Primitive
 -------------
-<str>::= "" | <character> | <character><str>
-<String>::="<str>"
+<str>::= <character> | <character><str>
+<String>::= "" | "<str>"
 
 <modifier>::= public | private
 <identifier>::= <letter> | _ | <identifier><letter> | <identifier><digit> | <identifier>_
@@ -28,17 +28,18 @@ Non-Primitive
 <object>::= <class_name> <identifier> = new <class_name>();
 
 
-<block>::= !!!!!!
+
 
 
 <class_name>::= A | ... | Z | <class_name><letter> | <class_name>_ | <class_name><digit>
 
 <method_decl>::= <modifier> <data_type> <identifier>([{<data_type> <identifier>[,]}]);
 
-<class>::= <modifier> class <class_name> /{
+<class>::= <modifier> class <class_name> \{
     [{<declaration>}]
     [{<method_decl>}] 
-/};
+    [{<method>}]
+\};
 
 <member_access>::= <identifier>.<identifier>;
 
@@ -47,6 +48,22 @@ Non-Primitive
 
 Commands
 --------
+<block>::= 
+    <declaration> | <block><declaration> |
+    <assignment> | <block><assignment> |
+    <expression> | <block><expression> |
+    <dowhile> | <block><dowhile> |
+    <for> | <block><for> |
+    <if> | <block><if> |
+    <switch> | <block><switch> |
+    <print> | <block><print>
+
+
+<method>::= <modifier> <data_type> <identifier>([{<data_type> <identifier>[,]}]) \{
+<block>
+<return>
+\}
+
 <assigned_value>::= <expression> | <char> | <String> | <boolean> 
 <assignment>::= <identifier> = <assigned_value> | new <class_name>() | identifier([{<identifier>[,]}]) ;
 
@@ -58,13 +75,36 @@ Commands
 
 <logic_operators>::= > | < | == | != | && | ||
 <condition>::= <assigned_value> | <assigned_value><logic_operators><assigned_value> {<logic_operators><assigned_value>}
-<dowhile>::= do<block>while(<condition>);
 
-<for>::= for(<assignment>; <condition>; <assignment>)
-            <block>
+<dowhile>::= 
+do\{<block> [<break>]\}
+while(<condition>);
+
+<for>::= for(<assignment>; <condition>; <assignment>)\{
+    <block>
+    [<break>]
+\}
+
+<else>::= else\{<block>\ [<break>]}
+<elseif>::= elseif(<condition>)\{<block> [<break>]\} [<elseif> | <else>]
+<if>::= if (condition) \{<block> [<break>]\}
+        [{<elseif>}] | [<else>]
 
 
-<else>::= else<block>
-<elseif>::= elseif(<condition>)<block>[<elseif> | <else>]
-<if>::= if (condition) <block>
-        [<elseif>] | [<else>]
+
+
+
+<switch>::= switch(<expression>) \{<block>\}
+    {case <expression>: \{<block>\} } 
+    [default: \{<block>\}]
+
+
+<print>::= out.print(<String> [{, <expression>}]);
+
+<return>::= return[ <expression>];
+
+
+<break>::= break;
+
+<ignore>::= .
+<comment>::= //<ignore>\n | /*<ignore>*/
