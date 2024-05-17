@@ -3,12 +3,12 @@ Primitive
 <data_type>::= int | char | double | boolean | void
 <letter>::= A | ... | Z | a | ... | z
 <digit>::= 0 | ... | 9
-<special_character> ::= ' ' | '!' | '"' | '#' | '$' | '%' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | '\\' | ']' | '^' | '_' | '`' | '{' | '|' | '}' | '~'
+<special_character> ::= ' ' | '!' | '"' | '#' | '$' | '%' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '['  | ']' | '^' | '_' | '`' | '{' | '|' | '}' | '~'
 
 
 <int>::= <data_type> [ - ]  <digit> | <int><digit>
 
-<character>::= <letter> | <digit> | <special>
+<character>::= <letter> | <digit> | <special_character>
 <char>:== <data_type> '<character>'
 
 <double>::= <data_type> <int> . <int> {<int>} d
