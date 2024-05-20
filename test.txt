@@ -1,0 +1,17 @@
+public class A
+{
+    String data;
+    public class B
+    {
+        public void method1() 
+        { 
+            out.print("%s", A.data);
+            return;
+        }
+        // comment
+        /*
+        multiline
+        comment
+        */
+    }
+}
