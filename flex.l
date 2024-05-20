@@ -1,44 +1,28 @@
 %{
 #include <stdio.h>
 #include "parser.tab.h"
-
-
 %}
-digit [0-9]
-bool true|false
-letter [a-zA-Z]
-special_character [ -~]
 
-int int
-char char
-double double
-boolean boolean
-void void
-String String
+number [1-9][0-9]*|0
+identifier [a-zA-Z][a-zA-Z_0-9]*
 
 %%
-{digit} {
- yylval=atoi(yytext); return DIGIT;
-}
-{letter} {
-    printf("Letter\n");
-}
+";" { return SEMICOLON; }
+"int" { return INT_DATA_TYPE; }
+"char" { return CHAR_DATA_TYPE; }
+"double" { return DOUBLE_DATA_TYPE; }
+"boolean" { return BOOLEAN_DATA_TYPE; }
+"String" { return STRING_DATA_TYPE; }
 
-{special_character} {
-    printf("Special Character\n");   
-}
+{number} { return NUMBER; }
+{identifier} { return IDENTIFIER; }
 
-{bool} {
-    printf("Boolean\n");
-}
+"\n" { return EOL; }
 
-\n {return EOL;}
-
-[ \t]+ {}
-
+[ \t]+ { /* Ignore whitespace */ }
 
 %%
+
 int yywrap() {
     return 1;
 }
-
