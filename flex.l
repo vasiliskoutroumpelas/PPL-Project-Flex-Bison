@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include "parser.tab.h"
 %}
 %option yylineno
@@ -30,7 +31,7 @@ letter [a-zA-Z]
 "for" { return FOR; }
 "if" { return IF; }
 "else" { return ELSE; }
-"elseif" { return ELSEIF; }
+"else if" { return ELSEIF; }
 "switch" { return SWITCH; }
 "case" { return CASE; }
 "default" { return DEFAULT; }
@@ -55,16 +56,20 @@ letter [a-zA-Z]
 "-" { return MINUS; }
 "*" { return MULT; }
 "/" { return DIV; }
+":" { return COLON; }
 
+[A-Z]({letter}|{digit}|_)* { yylval.str = strdup(yytext); return CLASS_IDENTIFIER; }
 {letter}({letter}|{digit}|_)* { yylval.str = strdup(yytext); return IDENTIFIER; }
+
 
 {digit}+ { yylval.intval = atoi(yytext); return INT; }
 {digit}+"."{digit}+ { yylval.dblval = atof(yytext); return DOUBLE; }
 
-\"[a-zA-Z0-9 -~]*\" { yylval.str = strdup(yytext); return STRING; }
+\'.\' {yylval.charval = yytext[0]; return CHAR;}
+\"({letter}|{digit}|[ -~])*\" { yylval.str = strdup(yytext); return STRING; }
 
 "//".* { /* ignore comments */ }
-"/*"([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*"*/" { /* ignore comments */ }
+"/*"(.|[ -~^*/]|(\n))*"*/" { /* ignore comments */ }
 
 [ \t\n]+ { /* ignore whitespace */ }
 
