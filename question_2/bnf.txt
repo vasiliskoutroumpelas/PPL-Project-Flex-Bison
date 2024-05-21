@@ -1,0 +1,110 @@
+Primitive
+---------
+<data_type>::= int | char | double | boolean | void
+<letter>::= A | ... | Z | a | ... | z
+<digit>::= 0 | ... | 9
+<special_character> ::= ' ' | '!' | '"' | '#' | '$' | '%' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '['  | ']' | '^' | '_' | '`' | '{' | '|' | '}' | '~'
+
+
+<int>::= <data_type> [ - ]  <digit> | <int><digit>
+
+<character>::= <letter> | <digit> | <special_character>
+<char>:== <data_type> '<character>'
+
+<double>::= <data_type> <int> . <int> {<int>} d
+
+<boolean>:== true | false
+
+
+Non-Primitive
+-------------
+<str>::= <character> | <character><str>
+<String>::= "" | "<str>"
+
+<modifier>::= public | private
+<identifier>::= <letter> | _ | <identifier><letter> | <identifier><digit> | <identifier>_
+<declaration>:== [<modifier>] <data_type> <identifier>;
+
+<object>::= <class_name> <identifier> = new <class_name>();
+
+
+
+
+
+<class_name>::= A | ... | Z | <class_name><letter> | <class_name>_ | <class_name><digit>
+
+<method_decl>::= <modifier> <data_type> <identifier>([{<data_type> <identifier>[,]}]);
+
+<class>::= <modifier> class <class_name> \{
+    [{<declaration>}]
+    [{<method_decl>}] 
+    [{<method>}]
+\};
+
+<member_access>::= <identifier>.<identifier>;
+
+
+
+
+Commands
+--------
+<block>::= 
+    <declaration> | <block><declaration> |
+    <assignment> | <block><assignment> |
+    <expression> | <block><expression> |
+    <dowhile> | <block><dowhile> |
+    <for> | <block><for> |
+    <if> | <block><if> |
+    <switch> | <block><switch> |
+    <print> | <block><print>
+
+
+<method>::= <modifier> <data_type> <identifier>([{<data_type> <identifier>[,]}]) \{
+<block>
+<return>
+\}
+
+<assigned_value>::= <expression> | <char> | <String> | <boolean> 
+<assignment>::= <identifier> = <assigned_value> | new <class_name>() | identifier([{<identifier>[,]}]) ;
+
+<expression>::= <term> | <expression> + <term> | <expression> - <term>
+<term>::= <factor> | <term> * <factor> | <term> / <factor>
+<factor>::= <identifier> | <int> | <double> | (<expression>)
+
+
+
+<logic_operators>::= > | < | == | != | && | ||
+<condition>::= <assigned_value> | <assigned_value><logic_operators><assigned_value> {<logic_operators><assigned_value>}
+
+<dowhile>::= 
+do\{<block> [<break>]\}
+while(<condition>);
+
+<for>::= for(<assignment>; <condition>; <assignment>)\{
+    <block>
+    [<break>]
+\}
+
+<else>::= else\{<block>\ [<break>]}
+<elseif>::= elseif(<condition>)\{<block> [<break>]\} [<elseif> | <else>]
+<if>::= if (condition) \{<block> [<break>]\}
+        [{<elseif>}] | [<else>]
+
+
+
+
+
+<switch>::= switch(<expression>) \{<block>\}
+    {case <expression>: \{<block>\} } 
+    [default: \{<block>\}]
+
+
+<print>::= out.print(<String> [{, <expression>}]);
+
+<return>::= return[ <expression>];
+
+
+<break>::= break;
+
+<ignore>::= .
+<comment>::= //<ignore>\n | /*<ignore>*/
