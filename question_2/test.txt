@@ -1,6 +1,11 @@
 public class A
 {
     int integer;
+    //NESTED CLASS
+    private class B
+    {
+        int data;
+    }
     char character;
     String string;
     boolean bool;
@@ -71,7 +76,7 @@ public class A
         
         
         
-        //TODO: Object2 object2 = new Object2();
+        //!!!!!!!!!!!!!TODO: Object2 object2 = new Object2();
 
         return;
     }
