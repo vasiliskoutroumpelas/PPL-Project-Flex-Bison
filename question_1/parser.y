@@ -52,16 +52,21 @@ modifier:
     ;
 
 class_body:
-    declarations
-    | method_declarations
-    | declarations method_declarations
-    | method_declarations declarations
+    /* empty */
+    | class_body_elements
     ;
 
-declarations:
-    declaration
-    | declarations declaration
+class_body_elements:
+    class_body_element
+    | class_body_elements class_body_element
     ;
+
+class_body_element:
+    declaration
+    | method_declaration
+    | class_declaration
+    ;
+
 
 declaration:
     data_type IDENTIFIER SEMICOLON
@@ -78,10 +83,6 @@ data_type:
     | CLASS_IDENTIFIER
     ;
 
-method_declarations:
-    method_declaration
-    | method_declarations method_declaration
-    ;
 
 method_declaration:
     modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE block return_stmt RBRACE
@@ -256,7 +257,7 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        //PRINT SOURCE CODE
+        /* //PRINT SOURCE CODE
         FILE* file_copy = fopen(argv[1], "r");
         char c = fgetc(file_copy); 
         while (c != EOF) 
@@ -265,7 +266,7 @@ int main(int argc, char** argv) {
             c = fgetc(file_copy); 
         } 
         fclose(file_copy);
-        //
+        // */
         
         yyparse();        
     }
