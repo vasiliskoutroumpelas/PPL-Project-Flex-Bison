@@ -72,6 +72,8 @@ class_body_element:
 declaration:
     data_type IDENTIFIER SEMICOLON
     | modifier data_type IDENTIFIER SEMICOLON
+    | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
+    | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
     ;
 
 data_type:

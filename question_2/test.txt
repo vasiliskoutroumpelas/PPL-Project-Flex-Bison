@@ -74,8 +74,9 @@ public class A
         out.print("counter now: %d", counter.attack);
         
         
-        
-        
+        //DECLARATION WITH assig
+        public String my_str="Test";
+        String str="Test";
         
         //!!!!!!!!!!!!!TODO: Object2 object2 = new Object2();
 
