@@ -2,11 +2,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define ARRAY_SIZE 100
+#define STRING_SIZE 100
+#define METHOD 1
+#define IDENT 0
 extern FILE *yyin;
 
 extern int yylineno;
 void yyerror(const char *s);
 int yylex(void);
+
+typedef struct identifier
+{
+    char* name;
+    int block_level;
+} Identifier;
+
+Identifier **methods_array;
+int methods_array_position=0;
+
+Identifier **identifiers_array;
+int identifiers_array_position=0;
+
+int current_block;
+
+void push(Identifier **array, char* var, int type);
+void search(Identifier **array, char* var, int block);
+void printArray(Identifier **array);
 
 %}
 
@@ -45,7 +67,7 @@ class_declarations:
     ;
 
 class_declaration:
-    modifier CLASS CLASS_IDENTIFIER LBRACE class_body RBRACE
+    modifier CLASS CLASS_IDENTIFIER LBRACE {current_block++;} class_body RBRACE {current_block--;}
     ;
 
 modifier:
@@ -72,16 +94,16 @@ class_body_element:
 
 
 declaration:
-    data_type IDENTIFIER SEMICOLON
-    | modifier data_type IDENTIFIER SEMICOLON
-    | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
-    | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
+    data_type IDENTIFIER SEMICOLON { push(identifiers_array, $2, IDENT); }
+    | modifier data_type IDENTIFIER SEMICOLON{ push(identifiers_array, $3, IDENT); }
+    | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ push(identifiers_array, $2, IDENT);}
+    | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ push(identifiers_array, $3, IDENT); }
     | data_type identifier_list SEMICOLON
     | data_type assignment_list SEMICOLON
     ;
 
 assignment_list:
-    IDENTIFIER ASSIGN assigned_value
+    IDENTIFIER ASSIGN assigned_value 
     | assignment_list COMMA IDENTIFIER ASSIGN assigned_value
     ;
 
@@ -97,7 +119,7 @@ data_type:
 
 
 method_declaration:
-    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE block return_stmt RBRACE
+    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE {push(methods_array, $3, METHOD); current_block++;} block return_stmt RBRACE {current_block--;}
     ;
 
 method_call:
@@ -150,10 +172,10 @@ statement:
     ;
 
 assignment:
-    IDENTIFIER ASSIGN assigned_value SEMICOLON
-    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON
-    | member_access ASSIGN assigned_value SEMICOLON
-    | IDENTIFIER ASSIGN method_call
+    IDENTIFIER ASSIGN assigned_value SEMICOLON{search(identifiers_array, $1, current_block);}
+    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {search(identifiers_array, $1, current_block);}
+    | member_access ASSIGN assigned_value SEMICOLON 
+    | IDENTIFIER ASSIGN method_call {search(identifiers_array, $1, current_block);}
     ;
 
 assigned_value:
@@ -201,16 +223,15 @@ logic_operator:
     ;
 
 dowhile:
-    DO LBRACE block RBRACE WHILE LPAREN condition RPAREN SEMICOLON
+    DO LBRACE {current_block++;} block RBRACE {current_block--;} WHILE LPAREN condition RPAREN SEMICOLON
     ;
 
 for:
-    FOR LPAREN assignment condition SEMICOLON assignment RPAREN LBRACE block RBRACE
-    | FOR LPAREN assignment condition SEMICOLON assignment RPAREN statement
+    FOR LPAREN assignment condition SEMICOLON assignment RPAREN LBRACE {current_block++;} block RBRACE {current_block--;}
     ;
 
 if:
-    IF LPAREN condition RPAREN LBRACE block RBRACE elseif_opt else_opt
+    IF LPAREN condition RPAREN LBRACE {current_block++;} block RBRACE {current_block--;} elseif_opt else_opt
     ;
 
 elseif_opt:
@@ -219,16 +240,16 @@ elseif_opt:
     ;
 
 elseif:
-    ELSEIF LPAREN condition RPAREN LBRACE block RBRACE elseif_opt
+    ELSEIF LPAREN condition RPAREN LBRACE {current_block++;} block RBRACE {current_block--;} elseif_opt
     ;
 
 else_opt:
     /* empty */
-    | ELSE LBRACE block RBRACE
+    | ELSE LBRACE {current_block++;} block RBRACE {current_block--;}
     ;
 
 switch:
-    SWITCH LPAREN expression RPAREN LBRACE case_blocks  default_block_opt RBRACE
+    SWITCH LPAREN expression RPAREN LBRACE {current_block++;} case_blocks  default_block_opt RBRACE {current_block--;}
     ;
 
 case_blocks:
@@ -237,12 +258,12 @@ case_blocks:
     ;
 
 case_block:
-    CASE expression COLON LBRACE block RBRACE
+    CASE expression COLON LBRACE {current_block++;} block RBRACE {current_block--;}
     ;
 
 default_block_opt:
     /* empty */
-    | DEFAULT COLON LBRACE block RBRACE
+    | DEFAULT COLON LBRACE {current_block++;} block RBRACE {current_block--;}
     ;
 
 print:
@@ -269,6 +290,23 @@ int main(int argc, char** argv) {
             return 1;
         }
 
+        
+    
+
+        methods_array = malloc(ARRAY_SIZE * sizeof(char));
+        for (int i = 0; i < ARRAY_SIZE; i++)
+            methods_array[i] = malloc((STRING_SIZE+1) * sizeof(char));
+
+        identifiers_array = malloc(ARRAY_SIZE * sizeof(char));
+        for (int i = 0; i < ARRAY_SIZE; i++)
+            identifiers_array[i] = malloc((STRING_SIZE+1) * sizeof(char));
+
+       // identifiers_array_position = 0;
+       // methods_array_position = 0;
+        current_block = 0;
+
+
+
         /* //PRINT SOURCE CODE
         FILE* file_copy = fopen(argv[1], "r");
         char c = fgetc(file_copy); 
@@ -280,9 +318,94 @@ int main(int argc, char** argv) {
         fclose(file_copy);
         // */
         
-        yyparse();        
+        yyparse();     
+
+        printf("----------METHODS-----------\n");
+        int line = 0;
+        for(int i = 0; i < methods_array_position; i++)
+        {
+            line++;
+            printf("line %d --> %s --> block: %d\n", line, methods_array[i]->name, methods_array[i]->block_level);
+        }  
+
+        printf("----------IDENTIFIERS-----------\n");
+        line = 0;
+        for(int i = 0; i < identifiers_array_position; i++){
+            line++;
+            printf("line %d --> %s --> block: %d\n", line, identifiers_array[i]->name, identifiers_array[i]->block_level);
+        }
+
+
+
+        
+
     }
     else
         printf("Usage: %s <filename>\n", argv[0]);
     return 0;
 }
+
+
+void push(Identifier **array, char* var, int type)
+{
+    int index=0;
+
+    if(type == METHOD)
+    {
+        index=methods_array_position;
+        methods_array_position++;
+    }
+    else{
+       
+        index=identifiers_array_position;
+        identifiers_array_position++;
+    }
+    
+    array[index]->name = var;
+    array[index]->block_level = current_block;
+}
+
+
+
+void search(Identifier **array, char* var, int block){
+    printf("%d %d\n", methods_array_position, identifiers_array_position);
+    int flag=0;
+    printf("SEARCHING: %s\n", var);
+    for(int i=0; i<identifiers_array_position; i++){
+        if(array[i]->name!=NULL && var!=NULL){ 
+            printf("%s\t%s\n",array[i]->name, var);
+
+
+            if(strcmp(array[i]->name, var)==0){
+                if(array[i]->block_level>current_block)
+                {
+                    printf("Out of scope: %s\n", var);
+                    exit(1);
+                }else{
+                printf("--->FOUND\n"); flag=1; break;
+                }
+            }
+        }
+
+
+        
+           
+    }
+
+    if(flag==0){
+        printf("\"%s\" has not been initialized\n", *var);
+        exit(1);
+    } 
+    /* for(int i=0; i<identifiers_array_position; i++){
+       printf("CURRENT: %s\n", array[i]->name);
+        
+        printf("%d",array[i]->block_level);*/
+       
+        
+            
+        
+
+
+    
+}
+

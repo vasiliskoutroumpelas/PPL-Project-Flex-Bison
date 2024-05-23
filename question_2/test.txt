@@ -10,15 +10,18 @@ public class A
     char character;
     String string;
     boolean bool;
+    
     public void method1(Object object)
     {
+        method2();
         data = -9.3;
+       // qwerty = 5;
         string="thats a string";        
         bool = true;
         character='c';  
         //OBJECT      
-        Object1 object1;
-        object1 = new Object(ident1, ident2, ident3);
+      //  Object1 object1;
+      //  object1 = new Object(ident1, ident2, ident3);
         //MEMBER ACCESS
         a.integer=b.whatever+4;
         //ASSIGN METHOD CALL
@@ -33,9 +36,8 @@ public class A
         }while(a>0);
 
 
-        //FOR LOOP SINGLE LINE
-        for(i=0; i<10; i=i+1;) a=8;
         //FOR LOOP MULTIPLE LINES
+        int i;
         for(i=0; i<10; i=i+1;){
             //IF MULTIPLE LINES ELSE IF ELSE
             if(i==5)
@@ -80,10 +82,10 @@ public class A
         
 
         //MULTIPLE DECLARATIONS AND ASSIGNMENTS
-        int x = 15, y = 16, z = 17;
-        double x, y, z;
+//        int x = 15, y = 16, z = 17;
+  //      double x, y, z;
 
-
+        
         //!!!!!!!!!!!!!TODO: Object2 object2 = new Object2();
 
         return;
