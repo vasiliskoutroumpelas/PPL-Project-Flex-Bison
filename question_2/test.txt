@@ -74,10 +74,16 @@ public class A
         out.print("counter now: %d", counter.attack);
         
         
-        //DECLARATION WITH assig
+        //DECLARATION WITH ASSIGNMENT
         public String my_str="Test";
         String str="Test";
         
+
+        //MULTIPLE DECLARATIONS AND ASSIGNMENTS
+        int x = 15, y = 16, z = 17;
+        double x, y, z;
+
+
         //!!!!!!!!!!!!!TODO: Object2 object2 = new Object2();
 
         return;

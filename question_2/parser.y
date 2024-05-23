@@ -28,9 +28,11 @@ int yylex(void);
 %token BOOLEAN_TRUE BOOLEAN_FALSE
 %token PUBLIC PRIVATE
 %token NEW CLASS RETURN BREAK DO WHILE FOR IF ELSE ELSEIF SWITCH CASE DEFAULT PRINT
-%token SEMICOLON COMMA LPAREN RPAREN LBRACE RBRACE DOT ASSIGN PLUS MINUS MULT DIV COLON
+%token COMMA SEMICOLON
+%token LPAREN RPAREN LBRACE RBRACE DOT ASSIGN PLUS MINUS MULT DIV COLON
 %token EQ_OP NEQ_OP GT_OP LT_OP AND_OP OR_OP
 
+%left IDENTIFIER
 %%
 
 program:
@@ -74,6 +76,13 @@ declaration:
     | modifier data_type IDENTIFIER SEMICOLON
     | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
+    | data_type identifier_list SEMICOLON
+    | data_type assignment_list SEMICOLON
+    ;
+
+assignment_list:
+    IDENTIFIER ASSIGN assigned_value
+    | assignment_list COMMA IDENTIFIER ASSIGN assigned_value
     ;
 
 data_type:
@@ -110,7 +119,7 @@ parameter:
 
 identifier_list:
     /* empty */
-    | identifiers
+    |identifiers
     ;
 
 identifiers:
