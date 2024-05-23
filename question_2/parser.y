@@ -65,6 +65,7 @@ class_body_element:
     declaration
     | method_declaration
     | class_declaration
+    | assignment
     ;
 
 
