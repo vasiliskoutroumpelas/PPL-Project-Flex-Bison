@@ -43,11 +43,13 @@ void printList(Node *head);
 // Function to free memory allocated for the linked list
 void freeList(Node *head);
 
-double search(Node *head, char* name, int block, int assign);
+void searchErrors(Node *head, char* name, int block);
+double searchIdentifier(Node *head, char* name);
+double getDataToIdentifier(Node *head, char* name);
 //========================================================
 
 
-
+void printSource(const char* filename);
 double operand_stack[MAX_STACK_SIZE];
 char operator_stack[MAX_STACK_SIZE];
 int operand_top = -1;
@@ -126,18 +128,18 @@ declaration:
     | modifier data_type IDENTIFIER SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
     | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $2, current_block); }
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
-    | data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $2, current_block); search(identifier_head, $2, current_block, ASSIGNMENT);}
-    | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $3, current_block);  search(identifier_head, $3, current_block, ASSIGNMENT);}
+    | data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $2, current_block); searchErrors(identifier_head, $2, current_block); getDataToIdentifier(identifier_head, $2);}
+    | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $3, current_block);  searchErrors(identifier_head, $3, current_block); getDataToIdentifier(identifier_head, $3);}
     | data_type identifier_list SEMICOLON
     | data_type assignment_list SEMICOLON
-    | data_type IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block); search(identifier_head, $2, current_block, !ASSIGNMENT);}
+    | data_type IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block); searchErrors(identifier_head, $2, current_block);}
     ;
 
 assignment_list:
     IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $1, current_block);}
     | assignment_list COMMA IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $3, current_block);}
-    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); search(identifier_head, $1, current_block, ASSIGNMENT);}
-    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); search(identifier_head, $3, current_block, ASSIGNMENT);}
+    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1, current_block); getDataToIdentifier(identifier_head, $1);}
+    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3, current_block); getDataToIdentifier(identifier_head, $3);}
     ;
 
 data_type:
@@ -220,11 +222,11 @@ statement:
     ;
 
 assignment:
-    IDENTIFIER ASSIGN assigned_value SEMICOLON{search(identifier_head, $1, current_block, !ASSIGNMENT);}
-    |IDENTIFIER ASSIGN expression SEMICOLON{ search(identifier_head, $1, current_block, ASSIGNMENT); double result=search(identifier_head, $1, current_block, !ASSIGNMENT); printf("%s=%.2lf\n", $1, result);}
-    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {search(identifier_head, $1, current_block, !ASSIGNMENT);}
+    IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1, current_block);}
+    |IDENTIFIER ASSIGN expression SEMICOLON{ searchErrors(identifier_head, $1, current_block); double result=getDataToIdentifier(identifier_head, $1); printf("%s=%.2lf\n", $1, result);}
+    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {searchErrors(identifier_head, $1, current_block);}
     | member_access ASSIGN expression SEMICOLON
-    | IDENTIFIER ASSIGN method_call {search(identifier_head, $1, current_block, !ASSIGNMENT);}
+    | IDENTIFIER ASSIGN method_call {searchErrors(identifier_head, $1, current_block);}
     ;
 
 assigned_value:
@@ -247,7 +249,7 @@ term:
     ;
 
 factor:
-    IDENTIFIER {push_operand(search(identifier_head, $1, current_block, !ASSIGNMENT));}
+    IDENTIFIER {push_operand(searchIdentifier(identifier_head, $1));}
     | INT{push_operand($1);}
     | MINUS INT{push_operand(-$2);}
     | DOUBLE {push_operand($1);}
@@ -341,6 +343,9 @@ int main(int argc, char** argv) {
         }
 
     current_block = 0;
+
+    /* printSource(argv[1]); */
+
     yyparse();
 
 
@@ -409,10 +414,9 @@ void freeList(Node *head) {
 }
 
 
-double search(Node *head, char* name, int block, int assign) {
+void searchErrors(Node *head, char* name, int block) {
     Node *current = head;
     //printf("SEARCHING: %s\n", name);
-    
     
     while (current != NULL) {
         if (strcmp(current->data->name, name) == 0) {
@@ -423,22 +427,37 @@ double search(Node *head, char* name, int block, int assign) {
             if(current->data->block_level>block){
                 printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d\n", current->data->name, current->data->block_level, block);
             }
-
-            //To assign or return the value of an identifier
-            if(assign){
-                current->data->value = pop_operand();
-             return 0;
-            }else{
-                return current->data->value;
-            }
-            
-           
+            return;
         }
         current = current->next;
     }
     /* printList(head); */
     printf("Error: identifier \"%s\" not declared properly.\n", name);
-    return 0;
+}
+
+double searchIdentifier(Node *head, char* name)
+{
+    Node *current = head;
+    while (current != NULL) {
+        if (strcmp(current->data->name, name) == 0) 
+        {
+            return current->data->value;
+        }
+        current = current->next;
+    }
+}
+
+double getDataToIdentifier(Node *head, char* name)
+{
+    Node *current = head;
+    while (current != NULL) {
+        if (strcmp(current->data->name, name) == 0) 
+        {
+            current->data->value = pop_operand();
+            return current->data->value;
+        }
+        current = current->next;
+    }
 }
 
 void push_operand(double value) {
@@ -502,4 +521,15 @@ double perform_operation(char op, double val1, double val2) {
             exit(EXIT_FAILURE);
     }
     return 0; // should never reach here
+}
+
+
+void printSource(const char* file_name){
+    FILE* file= fopen(file_name, "r");
+    char c = fgetc(file);
+    while(c != EOF){
+        printf("%c", c);
+        c = fgetc(file);
+    }
+    fclose(file);
 }
