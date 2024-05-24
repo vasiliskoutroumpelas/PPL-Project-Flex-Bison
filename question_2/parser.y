@@ -12,6 +12,8 @@ extern int yylineno;
 void yyerror(const char *s);
 int yylex(void);
 
+int search_push=0;
+
 typedef struct identifier
 {
     char* name;
@@ -109,12 +111,12 @@ declaration:
     | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $2, current_block); }
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
     | data_type identifier_list SEMICOLON
-    | data_type assignment_list SEMICOLON
+    | data_type assignment_list SEMICOLON{}
     ;
 
 assignment_list:
-    IDENTIFIER ASSIGN assigned_value 
-    | assignment_list COMMA IDENTIFIER ASSIGN assigned_value
+    IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $1, current_block);}
+    | assignment_list COMMA IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $3, current_block);}
     ;
 
 data_type:
@@ -133,7 +135,20 @@ method_declaration:
     ;
 
 method_call:
-    IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON
+    IDENTIFIER  method_call_list SEMICOLON
+    ;
+
+method_call_list:
+    LPAREN RPAREN
+    | method_identifiers RPAREN
+    ;
+
+method_identifiers:
+    LPAREN IDENTIFIER {insertNode(&identifier_head, $2, current_block);}
+    | LPAREN member_access
+    | method_identifiers COMMA IDENTIFIER {insertNode(&identifier_head, $3, current_block);}
+    | method_identifiers COMMA member_access
+    ;
 
 parameter_list:
     /* empty */
@@ -146,8 +161,9 @@ parameters:
     ;
 
 parameter:
-    data_type IDENTIFIER
+    data_type IDENTIFIER {insertNode(&identifier_head, $2, current_block);}
     ;
+
 
 identifier_list:
     /* empty */
@@ -155,13 +171,14 @@ identifier_list:
     ;
 
 identifiers:
-    IDENTIFIER
-    | identifiers COMMA IDENTIFIER    
+    IDENTIFIER {insertNode(&identifier_head, $1, current_block);}
     | member_access
+    | identifiers COMMA IDENTIFIER {insertNode(&identifier_head, $3, current_block);}    
+    | identifiers COMMA member_access
     ;
 
 member_access:
-    IDENTIFIER DOT IDENTIFIER;
+    IDENTIFIER DOT IDENTIFIER
     ;
     
 block:
@@ -302,6 +319,10 @@ int main(int argc, char** argv) {
 
     current_block = 0;
     yyparse();
+
+
+    printList(identifier_head);
+
     freeList(identifier_head);
     freeList(method_head);
     }
@@ -376,6 +397,12 @@ void search(Node *head, char* name, int block) {
         if (strcmp(current->data->name, name) == 0) {
              // Node with matching name found
              printf("---FOUND---\n");
+
+             //check block
+             if(current->data->block_level>block){
+                printf("Out of Scope: %d - %d\n", current->data->block_level, block);
+                break;
+             }
              return;
         }
         current = current->next;
