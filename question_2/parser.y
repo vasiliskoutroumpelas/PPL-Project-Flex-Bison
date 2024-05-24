@@ -18,19 +18,20 @@ typedef struct identifier
 {
     char* name;
     int block_level;
+    double value;
 } Identifier;
 
 typedef struct node
 {
     Identifier *data;
     struct node *next;
-}Node;
+} Node;
 
 Node *method_head=NULL;
 Node *identifier_head=NULL;
 
 int current_block;
-
+//========================================================
 // Function to create a new node
 Node* createNode(char* name, int block_level);
 // Function to insert a node at the end of the list
@@ -41,7 +42,21 @@ void printList(Node *head);
 void freeList(Node *head);
 
 void search(Node *head, char* name, int block);
+//========================================================
 
+
+#define MAX_STACK_SIZE 100
+
+double operand_stack[MAX_STACK_SIZE];
+char operator_stack[MAX_STACK_SIZE];
+int operand_top = -1;
+int operator_top = -1;
+
+void push_operand(double value);
+void push_operator(char op);
+double pop_operand();
+char pop_operator();
+double perform_operation(char op, double val1, double val2);
 %}
 
 %define parse.error verbose
@@ -206,7 +221,7 @@ assignment:
     ;
 
 assigned_value:
-    expression
+    expression {printf("result is: %lf\n", pop_operand());}
     | CHAR
     | STRING
     | BOOLEAN_TRUE
@@ -215,22 +230,22 @@ assigned_value:
 
 expression:
     term
-    | expression MINUS term
-    | expression PLUS term
+    | expression MINUS term{push_operator('-');}
+    | expression PLUS term{push_operator('+');}
     ;
 
 term:
     factor
-    | term MULT factor
-    | term DIV factor
+    | term MULT factor{push_operator('*');}
+    | term DIV factor{push_operator('/');}
     ;
 
 factor:
     IDENTIFIER
-    | INT
-    | MINUS INT
-    | DOUBLE
-    | MINUS DOUBLE
+    | INT{push_operand($1);}
+    | MINUS INT{push_operand(-$2);}
+    | DOUBLE {push_operand($1);}
+    | MINUS DOUBLE{push_operand(-$2);}
     | LPAREN expression RPAREN
     | member_access
     ;
@@ -390,13 +405,13 @@ void freeList(Node *head) {
 
 void search(Node *head, char* name, int block) {
     Node *current = head;
-    printf("SEARCHING: %s\n", name);
+    //printf("SEARCHING: %s\n", name);
     
     int flag = 0;
     while (current != NULL) {
         if (strcmp(current->data->name, name) == 0) {
              // Node with matching name found
-             printf("---FOUND---\n");
+             //printf("---FOUND---\n");
 
              //check block
              if(current->data->block_level>block){
@@ -412,3 +427,65 @@ void search(Node *head, char* name, int block) {
     exit(1);
 }
 
+void push_operand(double value) {
+    printf("PUSHING: %f\n", value);
+    if (operand_top >= MAX_STACK_SIZE - 1) {
+        fprintf(stderr, "Operand stack overflow\n");
+        exit(EXIT_FAILURE);
+    }
+    operand_stack[++operand_top] = value;
+}
+
+void push_operator(char op) {
+    printf("PUSHING: %c\n", op);
+    operator_stack[++operator_top] = op;
+    if (operator_top >= MAX_STACK_SIZE - 1) {
+        fprintf(stderr, "Operator stack overflow\n");
+        exit(EXIT_FAILURE);
+    }
+    while (operator_top >= 0 && (operator_stack[operator_top] == '*' || operator_stack[operator_top] == '/' ||(op == '+' || op == '-'))) 
+    {
+        char opr = pop_operator();
+        double val2 = pop_operand();
+        double val1 = pop_operand();
+        push_operand(perform_operation(opr, val1, val2));
+    }
+    
+}
+
+double pop_operand() {
+    printf("pop operand\n");
+    if (operand_top < 0) {
+        fprintf(stderr, "Operand stack underflow\n");
+        exit(EXIT_FAILURE);
+    }
+    return operand_stack[operand_top--];
+}
+
+char pop_operator() {
+    printf("pop operator\n");
+    if (operator_top < 0) {
+        fprintf(stderr, "Operator stack underflow\n");
+        exit(EXIT_FAILURE);
+    }
+    return operator_stack[operator_top--];
+}
+
+double perform_operation(char op, double val1, double val2) {
+    printf("OPERATION\n");
+    switch (op) {
+        case '+': return val1 + val2;
+        case '-': return val1 - val2;
+        case '*': return val1 * val2;
+        case '/': 
+            if (val2 == 0) {
+                fprintf(stderr, "Division by zero\n");
+                exit(EXIT_FAILURE);
+            }
+            return val1 / val2;
+        default:
+            fprintf(stderr, "Unknown operator: %c\n", op);
+            exit(EXIT_FAILURE);
+    }
+    return 0; // should never reach here
+}
