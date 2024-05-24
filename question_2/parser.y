@@ -4,8 +4,10 @@
 #include <string.h>
 #define ARRAY_SIZE 100
 #define STRING_SIZE 100
+#define MAX_STACK_SIZE 100
 #define METHOD 1
 #define IDENT 0
+#define ASSIGNMENT 1
 extern FILE *yyin;
 
 extern int yylineno;
@@ -31,7 +33,6 @@ Node *method_head=NULL;
 Node *identifier_head=NULL;
 
 int current_block;
-double searchValue(Node *head, char*name, int block, int assign);
 //========================================================
 // Function to create a new node
 Node* createNode(char* name, int block_level);
@@ -42,11 +43,10 @@ void printList(Node *head);
 // Function to free memory allocated for the linked list
 void freeList(Node *head);
 
-void search(Node *head, char* name, int block);
+double search(Node *head, char* name, int block, int assign);
 //========================================================
 
 
-#define MAX_STACK_SIZE 100
 
 double operand_stack[MAX_STACK_SIZE];
 char operator_stack[MAX_STACK_SIZE];
@@ -126,13 +126,18 @@ declaration:
     | modifier data_type IDENTIFIER SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
     | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $2, current_block); }
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
+    | data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $2, current_block); search(identifier_head, $2, current_block, ASSIGNMENT);}
+    | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $3, current_block);  search(identifier_head, $3, current_block, ASSIGNMENT);}
     | data_type identifier_list SEMICOLON
-    | data_type assignment_list SEMICOLON{}
+    | data_type assignment_list SEMICOLON
+    | data_type IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block); search(identifier_head, $2, current_block, !ASSIGNMENT);}
     ;
 
 assignment_list:
     IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $1, current_block);}
     | assignment_list COMMA IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $3, current_block);}
+    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); search(identifier_head, $1, current_block, ASSIGNMENT);}
+    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); search(identifier_head, $3, current_block, ASSIGNMENT);}
     ;
 
 data_type:
@@ -215,11 +220,11 @@ statement:
     ;
 
 assignment:
-    IDENTIFIER ASSIGN assigned_value SEMICOLON{search(identifier_head, $1, current_block);}
-    |IDENTIFIER ASSIGN expression SEMICOLON{search(identifier_head, $1, current_block); searchValue(identifier_head, $1, current_block, 1);}
-    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {search(identifier_head, $1, current_block);}
-    | member_access ASSIGN assigned_value SEMICOLON 
-    | IDENTIFIER ASSIGN method_call {search(identifier_head, $1, current_block);}
+    IDENTIFIER ASSIGN assigned_value SEMICOLON{search(identifier_head, $1, current_block, !ASSIGNMENT);}
+    |IDENTIFIER ASSIGN expression SEMICOLON{ search(identifier_head, $1, current_block, ASSIGNMENT); double result=search(identifier_head, $1, current_block, !ASSIGNMENT); printf("%s=%.2lf\n", $1, result);}
+    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {search(identifier_head, $1, current_block, !ASSIGNMENT);}
+    | member_access ASSIGN expression SEMICOLON
+    | IDENTIFIER ASSIGN method_call {search(identifier_head, $1, current_block, !ASSIGNMENT);}
     ;
 
 assigned_value:
@@ -242,7 +247,7 @@ term:
     ;
 
 factor:
-    IDENTIFIER {push_operand(searchValue(identifier_head, $1, current_block, 0));}
+    IDENTIFIER {push_operand(search(identifier_head, $1, current_block, !ASSIGNMENT));}
     | INT{push_operand($1);}
     | MINUS INT{push_operand(-$2);}
     | DOUBLE {push_operand($1);}
@@ -253,7 +258,9 @@ factor:
 
 condition:
     assigned_value
-    | assigned_value logic_operator assigned_value
+    | condition logic_operator assigned_value
+    | expression
+    | condition logic_operator expression
     ;
 
 logic_operator:
@@ -337,8 +344,6 @@ int main(int argc, char** argv) {
     yyparse();
 
 
-    printList(identifier_head);
-
     freeList(identifier_head);
     freeList(method_head);
     }
@@ -404,62 +409,40 @@ void freeList(Node *head) {
 }
 
 
-double searchValue(Node *head, char*name, int block, int assign){
-    Node *current = head;
-    
-   
-    while (current != NULL) {
-        if (strcmp(current->data->name, name) == 0) {
-           
-             //check block
-             if(current->data->block_level>block){
-                printf("Out of Scope: %d - %d\n", current->data->block_level, block);
-                break;
-             }
-            
-            if(assign){
-             current->data->value = pop_operand();
-             return 0;
-            }
-            else{
-             return current->data->value;
-            }
-        }
-        current = current->next;
-    }
-    printList(head);
-    printf("___XXX___\n");
-    exit(1);
-}
-
-
-void search(Node *head, char* name, int block) {
+double search(Node *head, char* name, int block, int assign) {
     Node *current = head;
     //printf("SEARCHING: %s\n", name);
     
     
     while (current != NULL) {
         if (strcmp(current->data->name, name) == 0) {
-             // Node with matching name found
-             //printf("---FOUND---\n");
+            // Node with matching name found
+            //printf("---FOUND---\n");
 
-             //check block
-             if(current->data->block_level>block){
-                printf("Out of Scope: %d - %d\n", current->data->block_level, block);
-                break;
-             }
+            //check block
+            if(current->data->block_level>block){
+                printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d\n", current->data->name, current->data->block_level, block);
+            }
 
-             return;
+            //To assign or return the value of an identifier
+            if(assign){
+                current->data->value = pop_operand();
+             return 0;
+            }else{
+                return current->data->value;
+            }
+            
+           
         }
         current = current->next;
     }
-    printList(head);
-    printf("___XXX___\n");
-    exit(1);
+    /* printList(head); */
+    printf("Error: identifier \"%s\" not declared properly.\n", name);
+    return 0;
 }
 
 void push_operand(double value) {
-    printf("PUSHING: %f\n", value);
+    //printf("PUSHING: %f\n", value);
     if (operand_top >= MAX_STACK_SIZE - 1) {
         fprintf(stderr, "Operand stack overflow\n");
         exit(EXIT_FAILURE);
@@ -468,7 +451,7 @@ void push_operand(double value) {
 }
 
 void push_operator(char op) {
-    printf("PUSHING: %c\n", op);
+    //printf("PUSHING: %c\n", op);
     operator_stack[++operator_top] = op;
     if (operator_top >= MAX_STACK_SIZE - 1) {
         fprintf(stderr, "Operator stack overflow\n");
@@ -485,7 +468,7 @@ void push_operator(char op) {
 }
 
 double pop_operand() {
-    printf("pop operand\n");
+    //printf("pop operand\n");
     if (operand_top < 0) {
         fprintf(stderr, "Operand stack underflow\n");
         exit(EXIT_FAILURE);
@@ -494,7 +477,7 @@ double pop_operand() {
 }
 
 char pop_operator() {
-    printf("pop operator\n");
+    //printf("pop operator\n");
     if (operator_top < 0) {
         fprintf(stderr, "Operator stack underflow\n");
         exit(EXIT_FAILURE);
@@ -503,7 +486,7 @@ char pop_operator() {
 }
 
 double perform_operation(char op, double val1, double val2) {
-    printf("OPERATION\n");
+    //printf("OPERATION\n");
     switch (op) {
         case '+': return val1 + val2;
         case '-': return val1 - val2;
