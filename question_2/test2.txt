@@ -1,0 +1,10 @@
+public class A{
+
+    int a, b, r;
+    a=1;
+    b=1;
+    r  =3;
+    r=(a+b)*r;
+  
+
+}

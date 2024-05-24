@@ -1,5 +1,6 @@
 public class A
 {
+    int test=1+1;
     /*
     public void method2(){
         int block_range_test;

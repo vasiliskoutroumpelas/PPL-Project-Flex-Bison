@@ -31,6 +31,7 @@ Node *method_head=NULL;
 Node *identifier_head=NULL;
 
 int current_block;
+double searchValue(Node *head, char*name, int block, int assign);
 //========================================================
 // Function to create a new node
 Node* createNode(char* name, int block_level);
@@ -215,14 +216,14 @@ statement:
 
 assignment:
     IDENTIFIER ASSIGN assigned_value SEMICOLON{search(identifier_head, $1, current_block);}
+    |IDENTIFIER ASSIGN expression SEMICOLON{search(identifier_head, $1, current_block); searchValue(identifier_head, $1, current_block, 1);}
     | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {search(identifier_head, $1, current_block);}
     | member_access ASSIGN assigned_value SEMICOLON 
     | IDENTIFIER ASSIGN method_call {search(identifier_head, $1, current_block);}
     ;
 
 assigned_value:
-    expression {printf("result is: %lf\n", pop_operand());}
-    | CHAR
+    CHAR
     | STRING
     | BOOLEAN_TRUE
     | BOOLEAN_FALSE
@@ -241,7 +242,7 @@ term:
     ;
 
 factor:
-    IDENTIFIER
+    IDENTIFIER {push_operand(searchValue(identifier_head, $1, current_block, 0));}
     | INT{push_operand($1);}
     | MINUS INT{push_operand(-$2);}
     | DOUBLE {push_operand($1);}
@@ -403,11 +404,40 @@ void freeList(Node *head) {
 }
 
 
+double searchValue(Node *head, char*name, int block, int assign){
+    Node *current = head;
+    
+   
+    while (current != NULL) {
+        if (strcmp(current->data->name, name) == 0) {
+           
+             //check block
+             if(current->data->block_level>block){
+                printf("Out of Scope: %d - %d\n", current->data->block_level, block);
+                break;
+             }
+            
+            if(assign){
+             current->data->value = pop_operand();
+             return 0;
+            }
+            else{
+             return current->data->value;
+            }
+        }
+        current = current->next;
+    }
+    printList(head);
+    printf("___XXX___\n");
+    exit(1);
+}
+
+
 void search(Node *head, char* name, int block) {
     Node *current = head;
     //printf("SEARCHING: %s\n", name);
     
-    int flag = 0;
+    
     while (current != NULL) {
         if (strcmp(current->data->name, name) == 0) {
              // Node with matching name found
@@ -418,6 +448,7 @@ void search(Node *head, char* name, int block) {
                 printf("Out of Scope: %d - %d\n", current->data->block_level, block);
                 break;
              }
+
              return;
         }
         current = current->next;
