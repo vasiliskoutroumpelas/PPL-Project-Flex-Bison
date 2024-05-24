@@ -158,7 +158,7 @@ method_declaration:
     ;
 
 method_call:
-    IDENTIFIER  method_call_list SEMICOLON
+    IDENTIFIER  method_call_list SEMICOLON { searchErrors(method_head, $1, current_block); }
     ;
 
 method_call_list:
@@ -201,7 +201,8 @@ identifiers:
     ;
 
 member_access:
-    IDENTIFIER DOT IDENTIFIER
+    IDENTIFIER DOT IDENTIFIER { searchErrors(identifier_head, $1, current_block); searchErrors(identifier_head, $3, current_block); }
+    | IDENTIFIER DOT method_call
     ;
     
 block:
@@ -223,7 +224,7 @@ statement:
 
 assignment:
     IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1, current_block);}
-    |IDENTIFIER ASSIGN expression SEMICOLON{ searchErrors(identifier_head, $1, current_block); double result=getDataToIdentifier(identifier_head, $1); printf("%s=%.2lf\n", $1, result);}
+    |IDENTIFIER ASSIGN expression SEMICOLON {searchErrors(identifier_head, $1, current_block); double result=getDataToIdentifier(identifier_head, $1); printf("%s=%.2lf\n", $1, result);}
     | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {searchErrors(identifier_head, $1, current_block);}
     | member_access ASSIGN expression SEMICOLON
     | IDENTIFIER ASSIGN method_call {searchErrors(identifier_head, $1, current_block);}
@@ -395,7 +396,7 @@ void insertNode(Node **head, char* name, int block_level) {
 void printList(Node *head) {
     Node *current = head;
     while (current != NULL) {
-        printf("Name: %s, Block Level: %d \n ", current->data->name, current->data->block_level);
+        printf("Name: %s, Block Level: %d \n", current->data->name, current->data->block_level);
         current = current->next;
     }
     printf("NULL\n");
@@ -425,14 +426,14 @@ void searchErrors(Node *head, char* name, int block) {
 
             //check block
             if(current->data->block_level>block){
-                printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d\n", current->data->name, current->data->block_level, block);
+                printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d in line %d\n", current->data->name, current->data->block_level, block, yylineno);
             }
             return;
         }
         current = current->next;
     }
     /* printList(head); */
-    printf("Error: identifier \"%s\" not declared properly.\n", name);
+    printf("Error: identifier \"%s\" in line %d not declared properly.\n", name, yylineno);
 }
 
 double searchIdentifier(Node *head, char* name)

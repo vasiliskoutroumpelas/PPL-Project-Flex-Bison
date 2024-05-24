@@ -6,14 +6,17 @@ public class A{
     char k='r';
     int test=16+1;
 
+
+
     //NESTED CLASS
     private class B{
         int data;
+            int integer;
+        int whatever;
     }
 
     //INVALID SCOPE
     data=4;
-    
     
     public void method1(Object object, Object meow)
     {
@@ -30,7 +33,7 @@ public class A{
 
         //MEMBER ACCESS
         object.integer=meow.whatever;
-
+        
         //ASSIGN METHOD CALL
         neg = method1(object1);    
         method1(object1);  
@@ -41,7 +44,7 @@ public class A{
             //SUB EXAMPLE
             a= 4-4;
         }while(a>0);
-
+        
         //FOR LOOP
         int i;
         for(i=0; i<10; i=i+1;){
