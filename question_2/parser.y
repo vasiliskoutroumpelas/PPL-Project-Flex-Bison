@@ -18,17 +18,27 @@ typedef struct identifier
     int block_level;
 } Identifier;
 
-Identifier **methods_array;
-int methods_array_position=0;
+typedef struct node
+{
+    Identifier *data;
+    struct node *next;
+}Node;
 
-Identifier **identifiers_array;
-int identifiers_array_position=0;
+Node *method_head=NULL;
+Node *identifier_head=NULL;
 
 int current_block;
 
-void push(Identifier **array, char* var, int type);
-void search(Identifier **array, char* var, int block);
-void printArray(Identifier **array);
+// Function to create a new node
+Node* createNode(char* name, int block_level);
+// Function to insert a node at the end of the list
+void insertNode(Node **head, char* name, int block_level);
+// Function to print the linked list
+void printList(Node *head);
+// Function to free memory allocated for the linked list
+void freeList(Node *head);
+
+void search(Node *head, char* name, int block);
 
 %}
 
@@ -94,10 +104,10 @@ class_body_element:
 
 
 declaration:
-    data_type IDENTIFIER SEMICOLON { push(identifiers_array, $2, IDENT); }
-    | modifier data_type IDENTIFIER SEMICOLON{ push(identifiers_array, $3, IDENT); }
-    | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ push(identifiers_array, $2, IDENT);}
-    | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ push(identifiers_array, $3, IDENT); }
+    data_type IDENTIFIER SEMICOLON { insertNode(&identifier_head, $2, current_block); }
+    | modifier data_type IDENTIFIER SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
+    | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $2, current_block); }
+    | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
     | data_type identifier_list SEMICOLON
     | data_type assignment_list SEMICOLON
     ;
@@ -119,7 +129,7 @@ data_type:
 
 
 method_declaration:
-    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE {push(methods_array, $3, METHOD); current_block++;} block return_stmt RBRACE {current_block--;}
+    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE {insertNode(&method_head, $3, current_block); current_block++;} block return_stmt RBRACE {current_block--;}
     ;
 
 method_call:
@@ -172,10 +182,10 @@ statement:
     ;
 
 assignment:
-    IDENTIFIER ASSIGN assigned_value SEMICOLON{search(identifiers_array, $1, current_block);}
-    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {search(identifiers_array, $1, current_block);}
+    IDENTIFIER ASSIGN assigned_value SEMICOLON{search(identifier_head, $1, current_block);}
+    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {search(identifier_head, $1, current_block);}
     | member_access ASSIGN assigned_value SEMICOLON 
-    | IDENTIFIER ASSIGN method_call {search(identifiers_array, $1, current_block);}
+    | IDENTIFIER ASSIGN method_call {search(identifier_head, $1, current_block);}
     ;
 
 assigned_value:
@@ -290,122 +300,88 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        
-    
-
-        methods_array = malloc(ARRAY_SIZE * sizeof(char));
-        for (int i = 0; i < ARRAY_SIZE; i++)
-            methods_array[i] = malloc((STRING_SIZE+1) * sizeof(char));
-
-        identifiers_array = malloc(ARRAY_SIZE * sizeof(char));
-        for (int i = 0; i < ARRAY_SIZE; i++)
-            identifiers_array[i] = malloc((STRING_SIZE+1) * sizeof(char));
-
-       // identifiers_array_position = 0;
-       // methods_array_position = 0;
-        current_block = 0;
-
-
-
-        /* //PRINT SOURCE CODE
-        FILE* file_copy = fopen(argv[1], "r");
-        char c = fgetc(file_copy); 
-        while (c != EOF) 
-        { 
-            printf ("%c", c); 
-            c = fgetc(file_copy); 
-        } 
-        fclose(file_copy);
-        // */
-        
-        yyparse();     
-
-        printf("----------METHODS-----------\n");
-        int line = 0;
-        for(int i = 0; i < methods_array_position; i++)
-        {
-            line++;
-            printf("line %d --> %s --> block: %d\n", line, methods_array[i]->name, methods_array[i]->block_level);
-        }  
-
-        printf("----------IDENTIFIERS-----------\n");
-        line = 0;
-        for(int i = 0; i < identifiers_array_position; i++){
-            line++;
-            printf("line %d --> %s --> block: %d\n", line, identifiers_array[i]->name, identifiers_array[i]->block_level);
-        }
-
-
-
-        
-
+    current_block = 0;
+    yyparse();
+    freeList(identifier_head);
+    freeList(method_head);
     }
     else
         printf("Usage: %s <filename>\n", argv[0]);
+        
     return 0;
 }
 
-
-void push(Identifier **array, char* var, int type)
-{
-    int index=0;
-
-    if(type == METHOD)
-    {
-        index=methods_array_position;
-        methods_array_position++;
+// Function to create a new node
+Node* createNode(char* name, int block_level) {
+    Node *newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
     }
-    else{
-       
-        index=identifiers_array_position;
-        identifiers_array_position++;
+    newNode->data = (Identifier*)malloc(sizeof(Identifier));
+    if (newNode->data == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(newNode);
+        exit(EXIT_FAILURE);
     }
-    
-    array[index]->name = var;
-    array[index]->block_level = current_block;
+    newNode->data->name = strdup(name);
+    newNode->data->block_level = block_level;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// Function to insert a node at the end of the list
+void insertNode(Node **head, char* name, int block_level) {
+    Node *newNode = createNode(name, block_level);
+    if (*head == NULL) {
+        *head = newNode;
+    } else {
+        Node *temp = *head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = newNode;
+    }
+}
+
+// Function to print the linked list
+void printList(Node *head) {
+    Node *current = head;
+    while (current != NULL) {
+        printf("Name: %s, Block Level: %d \n ", current->data->name, current->data->block_level);
+        current = current->next;
+    }
+    printf("NULL\n");
+}
+
+// Function to free memory allocated for the linked list
+void freeList(Node *head) {
+    Node *current = head;
+    while (current != NULL) {
+        Node *temp = current;
+        current = current->next;
+        free(temp->data->name);
+        free(temp->data);
+        free(temp);
+    }
 }
 
 
-
-void search(Identifier **array, char* var, int block){
-    printf("%d %d\n", methods_array_position, identifiers_array_position);
-    int flag=0;
-    printf("SEARCHING: %s\n", var);
-    for(int i=0; i<identifiers_array_position; i++){
-        if(array[i]->name!=NULL && var!=NULL){ 
-            printf("%s\t%s\n",array[i]->name, var);
-
-
-            if(strcmp(array[i]->name, var)==0){
-                if(array[i]->block_level>current_block)
-                {
-                    printf("Out of scope: %s\n", var);
-                    exit(1);
-                }else{
-                printf("--->FOUND\n"); flag=1; break;
-                }
-            }
-        }
-
-
-        
-           
-    }
-
-    if(flag==0){
-        printf("\"%s\" has not been initialized\n", *var);
-        exit(1);
-    } 
-    /* for(int i=0; i<identifiers_array_position; i++){
-       printf("CURRENT: %s\n", array[i]->name);
-        
-        printf("%d",array[i]->block_level);*/
-       
-        
-            
-        
-
-
+void search(Node *head, char* name, int block) {
+    Node *current = head;
+    printf("SEARCHING: %s\n", name);
     
+    int flag = 0;
+    while (current != NULL) {
+        if (strcmp(current->data->name, name) == 0) {
+             // Node with matching name found
+             printf("---FOUND---\n");
+             return;
+        }
+        current = current->next;
+    }
+    printList(head);
+    printf("___XXX___\n");
+    exit(1);
 }
 
