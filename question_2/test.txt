@@ -20,8 +20,8 @@ public class A
         bool = true;
         character='c';  
         //OBJECT      
-      //  Object1 object1;
-      //  object1 = new Object(ident1, ident2, ident3);
+        Object1 object1;
+        object1 = new Object(ident1, ident2, ident3);
         //MEMBER ACCESS
         a.integer=b.whatever+4;
         //ASSIGN METHOD CALL
@@ -57,7 +57,7 @@ public class A
                 break;
             }
         }
-
+        int num;
         num=1;
         //SWITCH CASE
         switch(num){
