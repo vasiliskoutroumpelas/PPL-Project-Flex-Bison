@@ -2,7 +2,7 @@ output: flex bison
 	gcc lex.yy.c parser.tab.c 
 
 run: output
-	./a.out test.txt
+	clear; ./a.out test.txt
 
 flex: flex.l
 	flex flex.l
