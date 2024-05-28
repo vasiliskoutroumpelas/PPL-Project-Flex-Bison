@@ -50,8 +50,6 @@
 
 <method_declaration> ::= <modifier> <data_type> <IDENTIFIER> "(" <parameter_list> ")" "{" <block> <return_stmt> "}"
 
-<method_call> ::= <IDENTIFIER> "(" <identifier_list> ")" ";"
-
 <parameter_list> ::= ε 
                    | <parameters>
 
@@ -59,6 +57,8 @@
                | <parameters> "," <parameter>
 
 <parameter> ::= <data_type> <IDENTIFIER>
+
+<method_call> ::= <IDENTIFIER> "(" <identifier_list> ")" ";"
 
 <identifier_list> ::= ε 
                     | <identifiers>

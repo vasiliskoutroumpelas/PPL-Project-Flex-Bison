@@ -143,6 +143,7 @@ assignment:
     IDENTIFIER ASSIGN assigned_value SEMICOLON
     | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON
     | member_access ASSIGN assigned_value SEMICOLON
+    | member_access ASSIGN method_call SEMICOLON
     | IDENTIFIER ASSIGN method_call
     ;
 

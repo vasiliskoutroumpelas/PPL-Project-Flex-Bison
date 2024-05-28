@@ -101,9 +101,6 @@ method_declaration:
     modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE block return_stmt RBRACE
     ;
 
-method_call:
-    IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON
-
 parameter_list:
     /* empty */
     | parameters
@@ -117,6 +114,9 @@ parameters:
 parameter:
     data_type IDENTIFIER
     ;
+
+method_call:
+    IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON
 
 identifier_list:
     /* empty */
