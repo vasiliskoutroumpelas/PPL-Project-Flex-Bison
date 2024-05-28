@@ -85,7 +85,8 @@
 
 <assignment> ::= <IDENTIFIER> "=" <assigned_value> ";" 
                | <IDENTIFIER> "=" "new" <CLASS_IDENTIFIER> "(" <identifier_list> ")" ";" 
-               | <member_access> "=" <assigned_value> ";" 
+               | <member_access> "=" <assigned_value> ";"
+               | <member_access> "=" <method_call> ";"
                | <IDENTIFIER> "=" <method_call>
 
 <assigned_value> ::= <expression> 
