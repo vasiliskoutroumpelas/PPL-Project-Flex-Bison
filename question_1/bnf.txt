@@ -60,6 +60,7 @@
                 | <member_access>
 
 <member_access> ::= <IDENTIFIER> "." <IDENTIFIER>
+                  |  <IDENTIFIER> "." <method_call>      
 
 <block> ::= <statement> 
           | <block> <statement>

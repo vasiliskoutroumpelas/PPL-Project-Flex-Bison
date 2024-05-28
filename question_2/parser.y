@@ -130,6 +130,7 @@ identifiers:
 
 member_access:
     IDENTIFIER DOT IDENTIFIER;
+    | IDENTIFIER DOT method_call
     ;
     
 block:
