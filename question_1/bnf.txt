@@ -1,110 +1,143 @@
-Primitive
----------
-<data_type>::= int | char | double | boolean | void
-<letter>::= A | ... | Z | a | ... | z
-<digit>::= 0 | ... | 9
-<special_character> ::= ' ' | '!' | '"' | '#' | '$' | '%' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '['  | ']' | '^' | '_' | '`' | '{' | '|' | '}' | '~'
+<CHAR> ::= '\'' <letter> '\''
+<STRING> ::= '"' ( <letter> | <digit> | [ -~] )* '"'
+<INT> ::= <digit>+
+<DOUBLE> ::= <digit>+ "." <digit>+
+<CLASS_IDENTIFIER> ::= [A-Z] ( <letter> | <digit> | "_" )*
+<IDENTIFIER> ::= <letter> ( <letter> | <digit> | "_" )*
 
+<digit> ::= "0" | ... | "9"
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
 
-<int>::= <data_type> [ - ]  <digit> | <int><digit>
+<program> ::= <class_declarations>
 
-<character>::= <letter> | <digit> | <special_character>
-<char>:== <data_type> '<character>'
+<class_declarations> ::= <class_declaration> 
+                       | <class_declarations> <class_declaration>
 
-<double>::= <data_type> <int> . <int> {<int>} d
+<class_declaration> ::= <modifier> "class" <CLASS_IDENTIFIER> "{" <class_body> "}"
 
-<boolean>:== true | false
+<modifier> ::= "public" 
+             | "private"
 
+<class_body> ::= ε 
+               | <class_body_elements>
 
-Non-Primitive
--------------
-<str>::= <character> | <character><str>
-<String>::= "" | "<str>"
+<class_body_elements> ::= <class_body_element> 
+                        | <class_body_elements> <class_body_element>
 
-<modifier>::= public | private
-<identifier>::= <letter> | _ | <identifier><letter> | <identifier><digit> | <identifier>_
-<declaration>:== [<modifier>] <data_type> <identifier>;
+<class_body_element> ::= <declaration> 
+                       | <method_declaration> 
+                       | <class_declaration> 
+                       | <assignment>
 
-<object>::= <class_name> <identifier> = new <class_name>();
+<declaration> ::= <data_type> <IDENTIFIER> ";" 
+                | <modifier> <data_type> <IDENTIFIER> ";"
 
+<data_type> ::= "int" 
+              | "char" 
+              | "double" 
+              | "boolean" 
+              | "void" 
+              | "String" 
+              | <CLASS_IDENTIFIER>
 
+<method_declaration> ::= <modifier> <data_type> <IDENTIFIER> "(" <parameter_list> ")" "{" <block> <return_stmt> "}"
 
+<method_call> ::= <IDENTIFIER> "(" <identifier_list> ")" ";"
 
+<parameter_list> ::= ε 
+                   | <parameters>
 
-<class_name>::= A | ... | Z | <class_name><letter> | <class_name>_ | <class_name><digit>
+<parameters> ::= <parameter> 
+               | <parameters> "," <parameter>
 
-<method_decl>::= <modifier> <data_type> <identifier>([{<data_type> <identifier>[,]}]);
+<parameter> ::= <data_type> <IDENTIFIER>
 
-<class>::= <modifier> class <class_name> \{
-    [{<declaration>}]
-    [{<method_decl>}] 
-    [{<method>}]
-\};
+<identifier_list> ::= ε 
+                    | <identifiers>
 
-<member_access>::= <identifier>.<identifier>;
+<identifiers> ::= <IDENTIFIER> 
+                | <identifiers> "," <IDENTIFIER> 
+                | <member_access>
 
+<member_access> ::= <IDENTIFIER> "." <IDENTIFIER>
 
+<block> ::= <statement> 
+          | <block> <statement>
 
+<statement> ::= <declaration> 
+              | <method_call> 
+              | <assignment> 
+              | <dowhile> 
+              | <for> 
+              | <if> 
+              | <switch> 
+              | "break" ";" 
+              | <print> ";"
 
-Commands
---------
-<block>::= 
-    <declaration> | <block><declaration> |
-    <assignment> | <block><assignment> |
-    <expression> | <block><expression> |
-    <dowhile> | <block><dowhile> |
-    <for> | <block><for> |
-    <if> | <block><if> |
-    <switch> | <block><switch> |
-    <print> | <block><print>
+<assignment> ::= <IDENTIFIER> "=" <assigned_value> ";" 
+               | <IDENTIFIER> "=" "new" <CLASS_IDENTIFIER> "(" <identifier_list> ")" ";" 
+               | <member_access> "=" <assigned_value> ";" 
+               | <IDENTIFIER> "=" <method_call>
 
+<assigned_value> ::= <expression> 
+                   | <CHAR> 
+                   | <STRING> 
+                   | "true" 
+                   | "false"
 
-<method>::= <modifier> <data_type> <identifier>([{<data_type> <identifier>[,]}]) \{
-<block>
-<return>
-\}
+<expression> ::= <term> 
+               | <expression> "-" <term> 
+               | <expression> "+" <term>
 
-<assigned_value>::= <expression> | <char> | <String> | <boolean> 
-<assignment>::= <identifier> = <assigned_value> | new <class_name>() | identifier([{<identifier>[,]}]) ;
+<term> ::= <factor> 
+         | <term> "*" <factor> 
+         | <term> "/" <factor>
 
-<expression>::= <term> | <expression> + <term> | <expression> - <term>
-<term>::= <factor> | <term> * <factor> | <term> / <factor>
-<factor>::= <identifier> | <int> | <double> | (<expression>)
+<factor> ::= <IDENTIFIER> 
+           | <INT> 
+           | "-" <INT> 
+           | <DOUBLE> 
+           | "-" <DOUBLE> 
+           | "(" <expression> ")" 
+           | <member_access>
 
+<condition> ::= <assigned_value> 
+              | <assigned_value> <logic_operator> <assigned_value>
 
+<logic_operator> ::= "==" 
+                   | "!=" 
+                   | ">" 
+                   | "<" 
+                   | "&&" 
+                   | "||"
 
-<logic_operators>::= > | < | == | != | && | ||
-<condition>::= <assigned_value> | <assigned_value><logic_operators><assigned_value> {<logic_operators><assigned_value>}
+<dowhile> ::= "do" "{" <block> "}" "while" "(" <condition> ")" ";"
 
-<dowhile>::= 
-do\{<block> [<break>]\}
-while(<condition>);
+<for> ::= "for" "(" <assignment> <condition> ";" <assignment> ")" "{" <block> "}" 
+        | "for" "(" <assignment> <condition> ";" <assignment> ")" <statement>
 
-<for>::= for(<assignment>; <condition>; <assignment>)\{
-    <block>
-    [<break>]
-\}
+<if> ::= "if" "(" <condition> ")" "{" <block> "}" <elseif_opt> <else_opt>
 
-<else>::= else\{<block>\ [<break>]}
-<elseif>::= elseif(<condition>)\{<block> [<break>]\} [<elseif> | <else>]
-<if>::= if (condition) \{<block> [<break>]\}
-        [{<elseif>}] | [<else>]
+<elseif_opt> ::= ε 
+               | <elseif>
 
+<elseif> ::= "else if" "(" <condition> ")" "{" <block> "}" <elseif_opt>
 
+<else_opt> ::= ε 
+             | "else" "{" <block> "}"
 
+<switch> ::= "switch" "(" <expression> ")" "{" <case_blocks> <default_block_opt> "}"
 
+<case_blocks> ::= <case_block> 
+                | <case_blocks> <case_block>
 
-<switch>::= switch(<expression>) \{<block>\}
-    {case <expression>: \{<block>\} } 
-    [default: \{<block>\}]
+<case_block> ::= "case" <expression> ":" "{" <block> "}"
 
+<default_block_opt> ::= ε 
+                      | "default" ":" "{" <block> "}"
 
-<print>::= out.print(<String> [{, <expression>}]);
+<print> ::= "out.print" "(" <STRING> ")" 
+          | "out.print" "(" <STRING> "," <identifier_list> ")"
 
-<return>::= return[ <expression>];
-
-
-<break>::= break;
-
-<ignore>::= .
-<comment>::= //<ignore>\n | /*<ignore>*/
+<return_stmt> ::= "return" <assigned_value> ";" 
+                | "return" ";"
