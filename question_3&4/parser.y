@@ -2,12 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ARRAY_SIZE 100
-#define STRING_SIZE 100
 #define MAX_STACK_SIZE 100
-#define METHOD 1
-#define IDENT 0
-#define ASSIGNMENT 1
 extern FILE *yyin;
 
 extern int yylineno;
@@ -381,17 +376,28 @@ Node* createNode(char* name, int block) {
 
 void scope_collapse(Node** head, int current_block) {
     Node* current = *head;
-   
+    Node* prev = NULL;
 
     while (current != NULL) {
         if (current->data->block_level == current_block) {
             Node* to_delete = current;
-           
+            current = current->next; // Move to the next node
+
+            if (prev == NULL) {
+                // If the node to delete is the head, update the head pointer
+                *head = current;
+            } else {
+                // Otherwise, link the previous node to the next node
+                prev->next = current;
+            }
+
+            // Free the node and its data
             free(to_delete->data->name);  // Free the name string
             free(to_delete->data);        // Free the Identifier
             free(to_delete);              // Free the Node
         } else {
-            // Move to the next node
+            // Move to the next node, updating prev
+            prev = current;
             current = current->next;
         }
     }
