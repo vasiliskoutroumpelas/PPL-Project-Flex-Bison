@@ -38,7 +38,7 @@ void printList(Node *head);
 // Function to free memory allocated for the linked list
 void freeList(Node *head);
 
-void searchErrors(Node *head, char* name, int block);
+int searchErrors(Node *head, char* name, int block);
 double searchIdentifier(Node *head, char* name);
 double getDataToIdentifier(Node *head, char* name);
 //========================================================
@@ -123,8 +123,17 @@ declaration:
     | modifier data_type IDENTIFIER SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
     | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $2, current_block); }
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
-    | data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $2, current_block); searchErrors(identifier_head, $2, current_block); getDataToIdentifier(identifier_head, $2);}
-    | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ insertNode(&identifier_head, $3, current_block);  searchErrors(identifier_head, $3, current_block); getDataToIdentifier(identifier_head, $3);}
+    | data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
+                                                        insertNode(&identifier_head, $2, current_block);  
+                                                        double result=getDataToIdentifier(identifier_head, $2);
+                                                        printf("%s=%.2lf\n", $2, result);
+                                                    }
+    | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
+                                                                    insertNode(&identifier_head, $3, current_block);  
+                                                                    searchErrors(identifier_head, $3, current_block); 
+                                                                    double result = getDataToIdentifier(identifier_head, $3);
+                                                                    printf("%s=%.2lf\n", $3, result);
+                                                                }
     | data_type identifier_list SEMICOLON
     | data_type assignment_list SEMICOLON
     | data_type IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block); searchErrors(identifier_head, $2, current_block);}
@@ -219,7 +228,12 @@ statement:
 
 assignment:
     IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1, current_block);}
-    |IDENTIFIER ASSIGN expression SEMICOLON {searchErrors(identifier_head, $1, current_block); double result=getDataToIdentifier(identifier_head, $1); printf("%s=%.2lf\n", $1, result);}
+    |IDENTIFIER ASSIGN expression SEMICOLON {
+                                                if(!searchErrors(identifier_head, $1, current_block)){
+                                                    double result=getDataToIdentifier(identifier_head, $1);
+                                                    printf("%s=%.2lf\n", $1, result);
+                                                }
+                                            }
     | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {searchErrors(identifier_head, $1, current_block);}
     | member_access ASSIGN expression SEMICOLON
     | IDENTIFIER ASSIGN method_call {searchErrors(identifier_head, $1, current_block);}
@@ -440,7 +454,7 @@ void freeList(Node *head) {
 }
 
 
-void searchErrors(Node *head, char* name, int block) {
+int searchErrors(Node *head, char* name, int block) {
     Node *current = head;
     //printf("SEARCHING: %s\n", name);
     
@@ -452,13 +466,15 @@ void searchErrors(Node *head, char* name, int block) {
             //check block
             if(current->data->block_level>block){
                 printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d in line %d\n", current->data->name, current->data->block_level, block, yylineno);
+                return 1;
             }
-            return;
+            return 0;
         }
         current = current->next;
     }
     /* printList(head); */
     printf("Error: identifier \"%s\" in line %d not declared properly.\n", name, yylineno);
+    return 1;
 }
 
 double searchIdentifier(Node *head, char* name)
