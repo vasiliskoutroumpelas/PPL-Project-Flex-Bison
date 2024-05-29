@@ -134,6 +134,7 @@ declaration:
                                                                     double result = getDataToIdentifier(identifier_head, $3);
                                                                     printf("%s=%.2lf\n", $3, result);
                                                                 }
+    | CLASS_IDENTIFIER IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block)}
     | data_type identifier_list SEMICOLON
     | data_type assignment_list SEMICOLON
     | data_type IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block); searchErrors(identifier_head, $2, current_block);}
