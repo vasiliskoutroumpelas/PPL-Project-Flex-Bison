@@ -24,7 +24,7 @@ public class A{
 
         //INVALID METHOD CALL
         method2();
-        double neg = -9.3;
+        double neg = 4 - 9.3;
         char character='c';
         int ident1, ident2, ident3;
 
@@ -32,7 +32,10 @@ public class A{
         object1 = new Object(ident1, ident2, ident3);
 
         //MEMBER ACCESS
+        int integer;
+        int whatever;
         object.integer=meow.whatever;
+        object.integer=random.sketchy;
         
         //ASSIGN METHOD CALL
         neg = method1(object1);    
