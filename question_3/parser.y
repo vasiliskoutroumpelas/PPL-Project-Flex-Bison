@@ -29,22 +29,31 @@ Node *identifier_head=NULL;
 
 int current_block=0;
 //========================================================
+
 // Function to create a new node
 Node* createNode(char* name, int block_level);
+
 // Function to insert a node at the end of the list
 void insertNode(Node **head, char* name, int block_level);
+
 // Function to print the linked list
 void printList(Node *head);
+
 // Function to free memory allocated for the linked list
 void freeList(Node *head);
 
 int searchErrors(Node *head, char* name, int block);
+
 double searchIdentifier(Node *head, char* name);
-double getDataToIdentifier(Node *head, char* name);
-//========================================================
+
+double getDataFromIdentifier(Node *head, char* name);
 
 void scope_collapse(Node** head, int current_block);
+//========================================================
+
 void printSource(const char* filename);
+
+
 double operand_stack[MAX_STACK_SIZE];
 char operator_stack[MAX_STACK_SIZE];
 int operand_top = -1;
@@ -125,13 +134,13 @@ declaration:
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
     | data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
                                                         insertNode(&identifier_head, $2, current_block);  
-                                                        double result=getDataToIdentifier(identifier_head, $2);
+                                                        double result=getDataFromIdentifier(identifier_head, $2);
                                                         printf("%s=%.2lf\n", $2, result);
                                                     }
     | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
                                                                     insertNode(&identifier_head, $3, current_block);  
                                                                     searchErrors(identifier_head, $3, current_block); 
-                                                                    double result = getDataToIdentifier(identifier_head, $3);
+                                                                    double result = getDataFromIdentifier(identifier_head, $3);
                                                                     printf("%s=%.2lf\n", $3, result);
                                                                 }
     | CLASS_IDENTIFIER IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block)}
@@ -142,8 +151,8 @@ declaration:
 assignment_list:
     IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $1, current_block);}
     | assignment_list COMMA IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $3, current_block);}
-    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1, current_block); getDataToIdentifier(identifier_head, $1);}
-    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3, current_block); getDataToIdentifier(identifier_head, $3);}
+    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1, current_block); getDataFromIdentifier(identifier_head, $1);}
+    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3, current_block); getDataFromIdentifier(identifier_head, $3);}
     ;
 
 data_type:
@@ -230,7 +239,7 @@ assignment:
     IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1, current_block);}
     |IDENTIFIER ASSIGN expression SEMICOLON {
                                                 if(!searchErrors(identifier_head, $1, current_block)){
-                                                    double result=getDataToIdentifier(identifier_head, $1);
+                                                    double result=getDataFromIdentifier(identifier_head, $1);
                                                     printf("%s=%.2lf\n", $1, result);
                                                 }
                                             }
@@ -491,7 +500,7 @@ double searchIdentifier(Node *head, char* name)
     }
 }
 
-double getDataToIdentifier(Node *head, char* name)
+double getDataFromIdentifier(Node *head, char* name)
 {
     Node *current = head;
     while (current != NULL) {
