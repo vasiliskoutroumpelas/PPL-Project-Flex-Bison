@@ -237,6 +237,7 @@ assignment:
                                             }
     | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {searchErrors(identifier_head, $1, current_block);}
     | member_access ASSIGN expression SEMICOLON
+    | member_access ASSIGN method_call
     | IDENTIFIER ASSIGN method_call {searchErrors(identifier_head, $1, current_block);}
     ;
 
