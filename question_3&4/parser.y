@@ -290,6 +290,7 @@ dowhile:
 
 for:
     FOR LPAREN assignment condition SEMICOLON assignment RPAREN LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
+    | FOR LPAREN assignment condition SEMICOLON assignment RPAREN statement
     ;
 
 if:
