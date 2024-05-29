@@ -1,16 +1,104 @@
 public class A{
 
-   int a;
-   private class B{
-    a=10;
-    int b;
+    int a=1, b=1, r=3;
+    int kappa=17;
+    r=(a+kappa)*r;
+    char k='r';
+    int test=16+1;
 
-    public class Cake{
-        b=14;
+
+
+    //NESTED CLASS
+    private class B{
+        int data;
+            int integer;
+        int whatever;
     }
-   }
 
-   private class C{
-    b=11;
-   }
+    //INVALID SCOPE
+    data=4;
+    
+    public void method1(Object object, Object meow)
+    {
+        method1(object, meow);
+
+        //INVALID METHOD CALL
+        method2();
+        double neg = -9.3;
+        char character='c';
+        int ident1, ident2, ident3;
+
+        Object object1;
+        object1 = new Object(ident1, ident2, ident3);
+
+        //MEMBER ACCESS
+        object.integer=meow.whatever;
+        
+        //ASSIGN METHOD CALL
+        neg = method1(object1);    
+        method1(object1);  
+
+        do{
+            int a;
+            a=5+5;
+            //SUB EXAMPLE
+            a= 4-4;
+        }while(a>0);
+        
+        //FOR LOOP
+        int i;
+        for(i=0; i<10; i=i+1;){
+            //IF MULTIPLE LINES ELSE IF ELSE
+            if(i==5)
+            {
+               int cake =6;
+            }
+            else if(i==6)
+            {
+               int cake=6;
+            }
+            else if(i==7)
+            {
+               int cake=7 ;
+            }else
+            {
+               int cake=0;
+                break;
+            }
+        }
+
+        int num=1;
+        
+        
+        //SWITCH CASE
+        switch(num){
+            case 1: {int counter=100; break;}
+            case 2: {int counter=101; break;}
+            default: {int counter=102; break;}
+        }
+
+        //SWITCH CASE NO DEFAULT
+        switch(num)
+        {
+            case 1: {int counter=100; break;}
+        }
+
+
+        //PRINT
+        out.print("counter now: %d", counter.attack);
+        
+        //DECLARATION WITH ASSIGNMENT
+        public String my_str="Test";
+        String str="Test";
+        
+
+        //MULTIPLE DECLARATIONS AND ASSIGNMENTS
+        int x = 15, y = 16, z = 17;
+        //double x, y, z;
+        x=10;
+
+
+        Object2 object2 = new Object2();
+        return;
+    }    
 }
