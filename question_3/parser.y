@@ -9,8 +9,6 @@ extern int yylineno;
 void yyerror(const char *s);
 int yylex(void);
 
-int search_push=0;
-
 typedef struct identifier
 {
     char* name;
