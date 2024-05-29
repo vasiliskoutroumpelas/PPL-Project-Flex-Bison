@@ -32,7 +32,7 @@ typedef struct node
 Node *method_head=NULL;
 Node *identifier_head=NULL;
 
-int current_block;
+int current_block=0;
 //========================================================
 // Function to create a new node
 Node* createNode(char* name, int block_level);
@@ -48,7 +48,7 @@ double searchIdentifier(Node *head, char* name);
 double getDataToIdentifier(Node *head, char* name);
 //========================================================
 
-
+void scope_collapse(Node** head, int current_block);
 void printSource(const char* filename);
 double operand_stack[MAX_STACK_SIZE];
 char operator_stack[MAX_STACK_SIZE];
@@ -97,7 +97,7 @@ class_declarations:
     ;
 
 class_declaration:
-    modifier CLASS CLASS_IDENTIFIER LBRACE {current_block++;} class_body RBRACE {current_block--;}
+    modifier CLASS CLASS_IDENTIFIER LBRACE {current_block++;} class_body RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 modifier:
@@ -154,7 +154,7 @@ data_type:
 
 
 method_declaration:
-    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE {insertNode(&method_head, $3, current_block); current_block++;} block return_stmt RBRACE {current_block--;}
+    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE {insertNode(&method_head, $3, current_block); current_block++;} block return_stmt RBRACE {scope_collapse(&method_head, current_block);current_block--;}
     ;
 
 method_call:
@@ -276,15 +276,15 @@ logic_operator:
     ;
 
 dowhile:
-    DO LBRACE {current_block++;} block RBRACE {current_block--;} WHILE LPAREN condition RPAREN SEMICOLON
+    DO LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;} WHILE LPAREN condition RPAREN SEMICOLON
     ;
 
 for:
-    FOR LPAREN assignment condition SEMICOLON assignment RPAREN LBRACE {current_block++;} block RBRACE {current_block--;}
+    FOR LPAREN assignment condition SEMICOLON assignment RPAREN LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 if:
-    IF LPAREN condition RPAREN LBRACE {current_block++;} block RBRACE {current_block--;} elseif_opt else_opt
+    IF LPAREN condition RPAREN LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;} elseif_opt else_opt
     ;
 
 elseif_opt:
@@ -293,16 +293,16 @@ elseif_opt:
     ;
 
 elseif:
-    ELSEIF LPAREN condition RPAREN LBRACE {current_block++;} block RBRACE {current_block--;} elseif_opt
+    ELSEIF LPAREN condition RPAREN LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;} elseif_opt
     ;
 
 else_opt:
     /* empty */
-    | ELSE LBRACE {current_block++;} block RBRACE {current_block--;}
+    | ELSE LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 switch:
-    SWITCH LPAREN expression RPAREN LBRACE {current_block++;} case_blocks  default_block_opt RBRACE {current_block--;}
+    SWITCH LPAREN expression RPAREN LBRACE {current_block++;} case_blocks  default_block_opt RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 case_blocks:
@@ -311,12 +311,12 @@ case_blocks:
     ;
 
 case_block:
-    CASE expression COLON LBRACE {current_block++;} block RBRACE {current_block--;}
+    CASE expression COLON LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 default_block_opt:
     /* empty */
-    | DEFAULT COLON LBRACE {current_block++;} block RBRACE {current_block--;}
+    | DEFAULT COLON LBRACE {current_block++;} block RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 print:
@@ -360,7 +360,7 @@ int main(int argc, char** argv) {
 }
 
 // Function to create a new node
-Node* createNode(char* name, int block_level) {
+Node* createNode(char* name, int block) {
     Node *newNode = (Node*)malloc(sizeof(Node));
     if (newNode == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -373,9 +373,28 @@ Node* createNode(char* name, int block_level) {
         exit(EXIT_FAILURE);
     }
     newNode->data->name = strdup(name);
-    newNode->data->block_level = block_level;
+    newNode->data->block_level = block;
     newNode->next = NULL;
     return newNode;
+}
+
+
+void scope_collapse(Node** head, int current_block) {
+    Node* current = *head;
+   
+
+    while (current != NULL) {
+        if (current->data->block_level == current_block) {
+            Node* to_delete = current;
+           
+            free(to_delete->data->name);  // Free the name string
+            free(to_delete->data);        // Free the Identifier
+            free(to_delete);              // Free the Node
+        } else {
+            // Move to the next node
+            current = current->next;
+        }
+    }
 }
 
 // Function to insert a node at the end of the list
