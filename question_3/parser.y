@@ -579,11 +579,13 @@ double perform_operation(char op, double val1, double val2) {
 
 
 void printSource(const char* file_name){
-    FILE* file= fopen(file_name, "r");
+   FILE* file= fopen(file_name, "r");
     char c = fgetc(file);
+    printf("___Start of Source Code___\n");
     while(c != EOF){
         printf("%c", c);
         c = fgetc(file);
     }
     fclose(file);
+    printf("\n___End of Source Code___\n");
 }
