@@ -72,12 +72,6 @@ public class A
         //PRINT
         out.print("counter now: %d", counter.attack);
         
-        
-        
-        
-        
-        //!!!!!!!!!!!!!TODO: Object2 object2 = new Object2();
-
         return;
     }
 }
