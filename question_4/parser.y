@@ -43,7 +43,7 @@ void printList(Node *head);
 void freeList(Node *head);
 
 // Function that searches for an identifier and checks if it has been declared and is in the right scope
-int searchErrors(Node *head, char* name, int block);
+int searchErrors(Node *head, char* name);
 
 // Fucntion that searches and returns the value of an identifier
 double searchIdentifier(Node *head, char* name);
@@ -152,7 +152,7 @@ declaration:
                                                     }
     | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
                                                                     insertNode(&identifier_head, $3, current_block);  
-                                                                    searchErrors(identifier_head, $3, current_block); 
+                                                                    searchErrors(identifier_head, $3); 
                                                                     double result = getDataToIdentifier(identifier_head, $3);
                                                                     printf("%s=%.2lf\n", $3, result);
                                                                 }
@@ -163,8 +163,8 @@ declaration:
 assignment_list:
     IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $1, current_block);}
     | assignment_list COMMA IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $3, current_block);}
-    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1, current_block); getDataToIdentifier(identifier_head, $1);}
-    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3, current_block); getDataToIdentifier(identifier_head, $3);}
+    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1); getDataToIdentifier(identifier_head, $1);}
+    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3); getDataToIdentifier(identifier_head, $3);}
     ;
 
 data_type:
@@ -183,7 +183,7 @@ method_declaration:
     ;
 
 method_call:
-    IDENTIFIER  method_call_list SEMICOLON { searchErrors(method_head, $1, current_block); }
+    IDENTIFIER  method_call_list SEMICOLON { searchErrors(method_head, $1); }
     ;
 
 method_call_list:
@@ -226,7 +226,7 @@ identifiers:
     ;
 
 member_access:
-    IDENTIFIER DOT IDENTIFIER { searchErrors(identifier_head, $1, current_block); searchErrors(identifier_head, $3, current_block); }
+    IDENTIFIER DOT IDENTIFIER { searchErrors(identifier_head, $1); searchErrors(identifier_head, $3); }
     | IDENTIFIER DOT method_call
     ;
     
@@ -248,17 +248,17 @@ statement:
     ;
 
 assignment:
-    IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1, current_block);}
+    IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1);}
     |IDENTIFIER ASSIGN expression SEMICOLON {
-                                                if(!searchErrors(identifier_head, $1, current_block)){
+                                                if(!searchErrors(identifier_head, $1)){
                                                     double result=getDataToIdentifier(identifier_head, $1);
                                                     printf("%s=%.2lf\n", $1, result);
                                                 }
                                             }
-    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {searchErrors(identifier_head, $1, current_block);}
+    | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {searchErrors(identifier_head, $1);}
     | member_access ASSIGN expression SEMICOLON
     | member_access ASSIGN method_call
-    | IDENTIFIER ASSIGN method_call {searchErrors(identifier_head, $1, current_block);}
+    | IDENTIFIER ASSIGN method_call {searchErrors(identifier_head, $1);}
     ;
 
 assigned_value:
@@ -447,21 +447,16 @@ void freeList(Node *head) {
 }
 
 
-int searchErrors(Node *head, char* name, int block) {
+int searchErrors(Node *head, char* name) {
     Node *current = head;
     
     while (current != NULL) {
         if (strcmp(current->data->name, name) == 0) {
-            //check scope
-            if(current->data->block_level>block){
-                printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d in line %d\n", current->data->name, current->data->block_level, block, yylineno);
-                return 1;
-            }
             return 0;
         }
         current = current->next;
     }
-    printf("Error: identifier \"%s\" in line %d not declared properly.\n", name, yylineno);
+    printf("Error: identifier \"%s\" in line %d not declared in this scope.\n", name, yylineno);
     return 1;
 }
 
