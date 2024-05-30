@@ -1,0 +1,14 @@
+public class A
+{
+    public void method1()
+    {
+        int my_var;
+        my_var=3;
+        return;
+    }
+    public void method2()
+    {
+        my_var=4;
+        return;
+    }
+}

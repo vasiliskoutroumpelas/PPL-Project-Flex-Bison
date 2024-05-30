@@ -1,0 +1,13 @@
+public class A
+{
+    private class B{
+        private void b_method(){
+            int a=4;
+            return;
+        }
+    }
+    
+    private void a_method(){
+        b_method();
+    }
+}
