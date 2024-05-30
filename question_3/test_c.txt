@@ -6,8 +6,10 @@ public class A
         int b=2;
         int c=6;
         int d=9;
+        
         double result1 = a+b*c/d; // result must be 5.33
         int result2 = ((a+b)*c)/d; // result must be 4
+        double result3=a+e;
         return;
     }
 }
