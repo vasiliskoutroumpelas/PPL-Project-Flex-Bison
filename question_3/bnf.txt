@@ -33,6 +33,8 @@
                 | <modifier> <data_type> <IDENTIFIER> ";"
                 | <data_type> <IDENTIFIER> "=" <assigned_value> ";"
                 | <modifier> <data_type> <IDENTIFIER> "=" <assigned_value> ";"
+                | <data_type> <IDENTIFIER> "=" <expression> ";"
+                | <modifier> <data_type> <IDENTIFIER> "=" <expression> ";"
                 | <data_type> <identifier_list> ";"
                 | <data_type> <assignment_list> ";"
 
