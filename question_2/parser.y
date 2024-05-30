@@ -76,8 +76,6 @@ declaration:
     | modifier data_type IDENTIFIER SEMICOLON
     | data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON
-    | CLASS_IDENTIFIER IDENTIFIER SEMICOLON
-    | CLASS_IDENTIFIER IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON
     | data_type identifier_list SEMICOLON
     | data_type assignment_list SEMICOLON
     ;

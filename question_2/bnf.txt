@@ -33,7 +33,6 @@
                 | <modifier> <data_type> <IDENTIFIER> ";"
                 | <data_type> <IDENTIFIER> "=" <assigned_value> ";"
                 | <modifier> <data_type> <IDENTIFIER> "=" <assigned_value> ";"
-                | <CLASS_IDENTIFIER> <IDENTIFIER> "=" "new" <CLASS_IDENTIFIER> "(" <identifier_list> ")" ";" 
                 | <data_type> <identifier_list> ";"
                 | <data_type> <assignment_list> ";"
 

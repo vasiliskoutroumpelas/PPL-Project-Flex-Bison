@@ -101,7 +101,6 @@ public class A{
         x=10;
 
 
-        Object2 object2 = new Object2();
         return;
     }    
 }
