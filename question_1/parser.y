@@ -260,7 +260,7 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        /* //PRINT SOURCE CODE
+        //PRINT SOURCE CODE
         FILE* file_copy = fopen(argv[1], "r");
         char c = fgetc(file_copy); 
         while (c != EOF) 
@@ -269,7 +269,7 @@ int main(int argc, char** argv) {
             c = fgetc(file_copy); 
         } 
         fclose(file_copy);
-        // */
+        
         
         yyparse();        
     }
