@@ -279,7 +279,7 @@ term:
     ;
 
 factor:
-    IDENTIFIER {push_operand(searchIdentifier(identifier_head, $1));}
+    IDENTIFIER {searchErrors(identifier_head, $1); push_operand(searchIdentifier(identifier_head, $1));}
     | INT{push_operand($1);}
     | MINUS INT{push_operand(-$2);}
     | DOUBLE {push_operand($1);}
