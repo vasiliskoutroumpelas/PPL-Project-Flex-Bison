@@ -114,7 +114,7 @@ class_declarations:
     ;
 
 class_declaration:
-    modifier CLASS CLASS_IDENTIFIER LBRACE {current_block++;} class_body RBRACE {scope_collapse(&identifier_head, current_block);current_block--;}
+    modifier CLASS CLASS_IDENTIFIER LBRACE {current_block++;} class_body RBRACE { scope_collapse(&method_head, current_block); scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 modifier:
@@ -179,7 +179,7 @@ data_type:
 
 
 method_declaration:
-    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE {insertNode(&method_head, $3, current_block); current_block++;} block return_stmt RBRACE {scope_collapse(&method_head, current_block);current_block--;}
+    modifier data_type IDENTIFIER LPAREN parameter_list RPAREN LBRACE {insertNode(&method_head, $3, current_block); current_block++;} block return_stmt RBRACE {scope_collapse(&method_head, current_block); scope_collapse(&identifier_head, current_block);current_block--;}
     ;
 
 method_call:
