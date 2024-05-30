@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
 
     current_block = 0;
 
-    /* printSource(argv[1]); */
+    printSource(argv[1]);
 
     yyparse();
 
