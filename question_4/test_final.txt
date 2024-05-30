@@ -1,0 +1,17 @@
+public class A{
+    int a=-4;
+    int b=8;
+
+    //variable c is not declared
+    int result1= a+b+c;
+    
+    int result2= a+b;
+
+    private void method1(int myvar, char mychar){
+        double mydouble;
+        return;
+    }
+    //variable out of scope
+    mydouble=4.1;
+    double snik_the_hustla=21.9;
+}
