@@ -8,6 +8,7 @@ extern FILE *yyin;
 extern int yylineno;
 void yyerror(const char *s);
 int yylex(void);
+//========================================================
 
 typedef struct identifier
 {
@@ -26,6 +27,7 @@ Node *method_head=NULL;
 Node *identifier_head=NULL;
 
 int current_block=0;
+
 //========================================================
 
 // Function to create a new node
@@ -40,28 +42,41 @@ void printList(Node *head);
 // Function to free memory allocated for the linked list
 void freeList(Node *head);
 
+// Function that searches for an identifier and checks if it has been declared and is in the right scope
 int searchErrors(Node *head, char* name, int block);
 
+// Fucntion that searches and returns the value of an identifier
 double searchIdentifier(Node *head, char* name);
 
-double getDataFromIdentifier(Node *head, char* name);
+// Function that performs an operation via the pop_operand function and gets the result to the identifier struct
+double getDataToIdentifier(Node *head, char* name);
 
+// Function that deletes from the identifier list all identifiers that are out of scope 
 void scope_collapse(Node** head, int current_block);
+
 //========================================================
-
-void printSource(const char* filename);
-
 
 double operand_stack[MAX_STACK_SIZE];
 char operator_stack[MAX_STACK_SIZE];
 int operand_top = -1;
 int operator_top = -1;
 
+//==========================================================
+
 void push_operand(double value);
+
 void push_operator(char op);
+
 double pop_operand();
+
 char pop_operator();
+
 double perform_operation(char op, double val1, double val2);
+
+//==========================================================
+
+void printSource(const char* filename);
+
 %}
 
 %define parse.error verbose
@@ -132,13 +147,13 @@ declaration:
     | modifier data_type IDENTIFIER ASSIGN assigned_value SEMICOLON{ insertNode(&identifier_head, $3, current_block);  }
     | data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
                                                         insertNode(&identifier_head, $2, current_block);  
-                                                        double result=getDataFromIdentifier(identifier_head, $2);
+                                                        double result=getDataToIdentifier(identifier_head, $2);
                                                         printf("%s=%.2lf\n", $2, result);
                                                     }
     | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
                                                                     insertNode(&identifier_head, $3, current_block);  
                                                                     searchErrors(identifier_head, $3, current_block); 
-                                                                    double result = getDataFromIdentifier(identifier_head, $3);
+                                                                    double result = getDataToIdentifier(identifier_head, $3);
                                                                     printf("%s=%.2lf\n", $3, result);
                                                                 }
     | CLASS_IDENTIFIER IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block)}
@@ -149,8 +164,8 @@ declaration:
 assignment_list:
     IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $1, current_block);}
     | assignment_list COMMA IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $3, current_block);}
-    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1, current_block); getDataFromIdentifier(identifier_head, $1);}
-    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3, current_block); getDataFromIdentifier(identifier_head, $3);}
+    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1, current_block); getDataToIdentifier(identifier_head, $1);}
+    | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3, current_block); getDataToIdentifier(identifier_head, $3);}
     ;
 
 data_type:
@@ -237,7 +252,7 @@ assignment:
     IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1, current_block);}
     |IDENTIFIER ASSIGN expression SEMICOLON {
                                                 if(!searchErrors(identifier_head, $1, current_block)){
-                                                    double result=getDataFromIdentifier(identifier_head, $1);
+                                                    double result=getDataToIdentifier(identifier_head, $1);
                                                     printf("%s=%.2lf\n", $1, result);
                                                 }
                                             }
@@ -396,36 +411,6 @@ Node* createNode(char* name, int block) {
     return newNode;
 }
 
-
-void scope_collapse(Node** head, int current_block) {
-    Node* current = *head;
-    Node* prev = NULL;
-
-    while (current != NULL) {
-        if (current->data->block_level == current_block) {
-            Node* to_delete = current;
-            current = current->next; // Move to the next node
-
-            if (prev == NULL) {
-                // If the node to delete is the head, update the head pointer
-                *head = current;
-            } else {
-                // Otherwise, link the previous node to the next node
-                prev->next = current;
-            }
-
-            // Free the node and its data
-            free(to_delete->data->name);  // Free the name string
-            free(to_delete->data);        // Free the Identifier
-            free(to_delete);              // Free the Node
-        } else {
-            // Move to the next node, updating prev
-            prev = current;
-            current = current->next;
-        }
-    }
-}
-
 // Function to insert a node at the end of the list
 void insertNode(Node **head, char* name, int block_level) {
     Node *newNode = createNode(name, block_level);
@@ -465,14 +450,10 @@ void freeList(Node *head) {
 
 int searchErrors(Node *head, char* name, int block) {
     Node *current = head;
-    //printf("SEARCHING: %s\n", name);
     
     while (current != NULL) {
         if (strcmp(current->data->name, name) == 0) {
-            // Node with matching name found
-            //printf("---FOUND---\n");
-
-            //check block
+            //check scope
             if(current->data->block_level>block){
                 printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d in line %d\n", current->data->name, current->data->block_level, block, yylineno);
                 return 1;
@@ -481,7 +462,6 @@ int searchErrors(Node *head, char* name, int block) {
         }
         current = current->next;
     }
-    /* printList(head); */
     printf("Error: identifier \"%s\" in line %d not declared properly.\n", name, yylineno);
     return 1;
 }
@@ -498,7 +478,7 @@ double searchIdentifier(Node *head, char* name)
     }
 }
 
-double getDataFromIdentifier(Node *head, char* name)
+double getDataToIdentifier(Node *head, char* name)
 {
     Node *current = head;
     while (current != NULL) {
@@ -511,8 +491,36 @@ double getDataFromIdentifier(Node *head, char* name)
     }
 }
 
+void scope_collapse(Node** head, int current_block) {
+    Node* current = *head;
+    Node* prev = NULL;
+
+    while (current != NULL) {
+        if (current->data->block_level == current_block) {
+            Node* to_delete = current;
+            current = current->next; // Move to the next node
+
+            if (prev == NULL) {
+                // If the node to delete is the head, update the head pointer
+                *head = current;
+            } else {
+                // Otherwise, link the previous node to the next node
+                prev->next = current;
+            }
+
+            // Free the node and its data
+            free(to_delete->data->name);  // Free the name string
+            free(to_delete->data);        // Free the Identifier
+            free(to_delete);              // Free the Node
+        } else {
+            // Move to the next node, updating prev
+            prev = current;
+            current = current->next;
+        }
+    }
+}
+
 void push_operand(double value) {
-    //printf("PUSHING: %f\n", value);
     if (operand_top >= MAX_STACK_SIZE - 1) {
         fprintf(stderr, "Operand stack overflow\n");
         exit(EXIT_FAILURE);
@@ -521,7 +529,6 @@ void push_operand(double value) {
 }
 
 void push_operator(char op) {
-    //printf("PUSHING: %c\n", op);
     operator_stack[++operator_top] = op;
     if (operator_top >= MAX_STACK_SIZE - 1) {
         fprintf(stderr, "Operator stack overflow\n");
@@ -538,7 +545,6 @@ void push_operator(char op) {
 }
 
 double pop_operand() {
-    //printf("pop operand\n");
     if (operand_top < 0) {
         fprintf(stderr, "Operand stack underflow\n");
         exit(EXIT_FAILURE);
@@ -547,7 +553,6 @@ double pop_operand() {
 }
 
 char pop_operator() {
-    //printf("pop operator\n");
     if (operator_top < 0) {
         fprintf(stderr, "Operator stack underflow\n");
         exit(EXIT_FAILURE);
@@ -556,7 +561,6 @@ char pop_operator() {
 }
 
 double perform_operation(char op, double val1, double val2) {
-    //printf("OPERATION\n");
     switch (op) {
         case '+': return val1 + val2;
         case '-': return val1 - val2;
