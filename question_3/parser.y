@@ -43,7 +43,7 @@ void printList(Node *head);
 void freeList(Node *head);
 
 // Function that searches for an identifier and checks if it has been declared and is in the right scope
-int searchErrors(Node *head, char* name, int block);
+void searchErrors(Node *head, char* name, int block);
 
 // Fucntion that searches and returns the value of an identifier
 double searchIdentifier(Node *head, char* name);
@@ -152,11 +152,11 @@ declaration:
                                                     }
     | modifier data_type IDENTIFIER ASSIGN expression SEMICOLON{ 
                                                                     insertNode(&identifier_head, $3, current_block);  
-                                                                    searchErrors(identifier_head, $3, current_block); 
                                                                     double result = getDataToIdentifier(identifier_head, $3);
                                                                     printf("%s=%.2lf\n", $3, result);
                                                                 }
-    | CLASS_IDENTIFIER IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block)}
+    | CLASS_IDENTIFIER IDENTIFIER SEMICOLON {insertNode(&identifier_head, $2, current_block);}
+    | CLASS_IDENTIFIER IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {insertNode(&identifier_head, $2, current_block);}
     | data_type identifier_list SEMICOLON
     | data_type assignment_list SEMICOLON
     ;
@@ -164,7 +164,7 @@ declaration:
 assignment_list:
     IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $1, current_block);}
     | assignment_list COMMA IDENTIFIER ASSIGN assigned_value{insertNode(&identifier_head, $3, current_block);}
-    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); searchErrors(identifier_head, $1, current_block); getDataToIdentifier(identifier_head, $1);}
+    | IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $1, current_block); getDataToIdentifier(identifier_head, $1);}
     | assignment_list COMMA IDENTIFIER ASSIGN expression{insertNode(&identifier_head, $3, current_block); searchErrors(identifier_head, $3, current_block); getDataToIdentifier(identifier_head, $3);}
     ;
 
@@ -250,11 +250,10 @@ statement:
 
 assignment:
     IDENTIFIER ASSIGN assigned_value SEMICOLON{searchErrors(identifier_head, $1, current_block);}
-    |IDENTIFIER ASSIGN expression SEMICOLON {
-                                                if(!searchErrors(identifier_head, $1, current_block)){
+    |IDENTIFIER ASSIGN expression SEMICOLON {       
+                                                    searchErrors(identifier_head, $1, current_block);
                                                     double result=getDataToIdentifier(identifier_head, $1);
                                                     printf("%s=%.2lf\n", $1, result);
-                                                }
                                             }
     | IDENTIFIER ASSIGN NEW CLASS_IDENTIFIER LPAREN identifier_list RPAREN SEMICOLON {searchErrors(identifier_head, $1, current_block);}
     | member_access ASSIGN expression SEMICOLON
@@ -448,7 +447,7 @@ void freeList(Node *head) {
 }
 
 
-int searchErrors(Node *head, char* name, int block) {
+void searchErrors(Node *head, char* name, int block) {
     Node *current = head;
     
     while (current != NULL) {
@@ -456,14 +455,14 @@ int searchErrors(Node *head, char* name, int block) {
             //check scope
             if(current->data->block_level>block){
                 printf("Error: identifier \"%s\" is out of scope. Declaration block: %d Call block: %d in line %d\n", current->data->name, current->data->block_level, block, yylineno);
-                return 1;
+                exit(EXIT_FAILURE);
             }
-            return 0;
+            return;
         }
         current = current->next;
     }
     printf("Error: identifier \"%s\" in line %d not declared properly.\n", name, yylineno);
-    return 1;
+    exit(EXIT_FAILURE);
 }
 
 double searchIdentifier(Node *head, char* name)
