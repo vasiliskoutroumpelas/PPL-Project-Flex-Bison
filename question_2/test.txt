@@ -83,9 +83,6 @@ public class A
         int x = 15, y = 16, z = 17;
         double x, y, z;
 
-
-        //!!!!!!!!!!!!!TODO: Object2 object2 = new Object2();
-
         return;
     }
 }

@@ -1,0 +1,22 @@
+public class A
+{
+    char String character;
+    String string;
+    boolean bool;
+    public void method1(Object object)
+    {
+        data = -9.3;
+        string="thats a string";        
+        bool = true;
+        character='c';  
+        //OBJECT      
+        Object1 object1;
+        object1 = new Object(ident1, ident2, ident3);
+        //MEMBER ACCESS
+        a.integer=b.whatever+4;
+        //ASSIGN METHOD CALL
+        data = method1(object);    
+        method1(object);
+        return;
+    }
+}
